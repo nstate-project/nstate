@@ -1,0 +1,405 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+
+<Base
+  title="Countries"
+  description="nstate country chapters — fork the methodology to audit your government. Any country, any language."
+>
+  <div class="container">
+    <div class="page-header">
+      <div class="breadcrumb">
+        <a href="/">nstate</a> / <span>countries</span>
+      </div>
+      <h1>Countries</h1>
+      <p class="page-sub">
+        The methodology is country-agnostic. Fork the template, adapt your data sources,
+        and open a PR. Every country deserves a forensic audit of how it spends public money.
+      </p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Active chapters -->
+    <section class="section">
+      <div class="section-label">active chapters</div>
+      <div class="country-grid">
+        <a href="/uk" class="country-card country-card--active">
+          <div class="country-card__header">
+            <span class="country-card__code">UK</span>
+            <span class="badge badge--amber">active</span>
+          </div>
+          <h2 class="country-card__name">United Kingdom</h2>
+          <p class="country-card__desc">
+            The founding chapter. ONS, HMRC, OBR, DfE, DWP, Ofgem, Cabinet Office.
+            First scorecards in progress.
+          </p>
+          <div class="country-card__stats">
+            <div class="stat">
+              <span class="stat__val">3</span>
+              <span class="stat__label">in pipeline</span>
+            </div>
+            <div class="stat">
+              <span class="stat__val">0</span>
+              <span class="stat__label">published</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- How to start -->
+    <section class="section" id="start">
+      <div class="section-label">start a chapter</div>
+      <h2>how it works</h2>
+      <p class="section-sub">
+        A country chapter is a folder in the nstate repository with its own data sources,
+        pipelines, and scorecards. You bring the knowledge of your government;
+        the methodology and template are already built.
+      </p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step__num">01</div>
+          <h3>fork or open an issue</h3>
+          <p>
+            Open a GitHub issue titled "Country chapter: [your country]" with your name,
+            country, and a primary data source you will use for the first scorecard.
+            We will create a folder and add you as a chapter maintainer.
+          </p>
+          <a href="https://github.com/nstate-project/nstate/issues" class="link-arrow" target="_blank" rel="noopener">open an issue →</a>
+        </div>
+
+        <div class="step">
+          <div class="step__num">02</div>
+          <h3>copy the country template</h3>
+          <p>
+            Copy <code>COUNTRY-TEMPLATE.md</code> from the repo root into
+            <code>your-country/README.md</code>. Fill in your national data sources
+            and the equivalent of the Open Government Licence for your jurisdiction.
+          </p>
+          <a href="https://github.com/nstate-project/nstate/blob/main/COUNTRY-TEMPLATE.md" class="link-arrow" target="_blank" rel="noopener">view template →</a>
+        </div>
+
+        <div class="step">
+          <div class="step__num">03</div>
+          <h3>first scorecard PR</h3>
+          <p>
+            Follow the scorecard template in <code>METHODOLOGY.md</code>. Submit your
+            first scorecard via PR. The nstate methodology team will review the evidence
+            quality rating and data sourcing before merging.
+          </p>
+          <a href="/methodology" class="link-arrow">read the methodology →</a>
+        </div>
+
+        <div class="step">
+          <div class="step__num">04</div>
+          <h3>get listed here</h3>
+          <p>
+            Once your first scorecard is merged and the data pipeline is live,
+            your chapter is listed on this page. You are the maintainer —
+            nstate does not control country chapter editorial direction.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Why it matters -->
+    <section class="section">
+      <div class="section-label">why international</div>
+      <h2>governments compete on accountability when you measure them</h2>
+      <p class="section-sub">
+        Every government has audit bodies. Almost none publish their findings in
+        a format that is comparable, reproducible, and citizen-facing.
+        nstate exists to change that.
+      </p>
+      <div class="why-grid">
+        <div class="why-item">
+          <h3>comparable methodology</h3>
+          <p>The same scorecard template works for any country. UK civil service productivity and German civil service productivity become directly comparable.</p>
+        </div>
+        <div class="why-item">
+          <h3>no political capture</h3>
+          <p>Chapter maintainers are independent. nstate provides the methodology. Countries provide the data and the analysis. Political affiliation of maintainers must be disclosed.</p>
+        </div>
+        <div class="why-item">
+          <h3>fork if you disagree</h3>
+          <p>If a national government successfully pressures a chapter, the community can fork it. The data and methodology are CC BY 4.0. Capture is not permanent.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="cta-block">
+      <div>
+        <strong>Ready to start?</strong>
+        <p>The fastest path is to open a GitHub issue with your country and first data source.</p>
+      </div>
+      <div class="cta-block__btns">
+        <a href="https://github.com/nstate-project/nstate/issues" class="btn btn--primary" target="_blank" rel="noopener">open an issue ↗</a>
+        <a href="/contribute" class="btn btn--ghost">contribution guide</a>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page-header {
+    padding: 3rem 0 2rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    margin-bottom: 1rem;
+  }
+
+  .breadcrumb a {
+    color: var(--amber);
+    text-decoration: none;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .page-sub {
+    color: var(--text-2);
+    max-width: 60ch;
+  }
+
+  .section {
+    padding: 3rem 0;
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 0.75rem;
+  }
+
+  .section h2 {
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-sub {
+    color: var(--text-2);
+    font-size: 0.88rem;
+    margin-bottom: 2rem;
+    max-width: 60ch;
+  }
+
+  /* Country grid */
+  .country-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .country-card {
+    background: var(--bg);
+    padding: 1.75rem;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: background 0.15s;
+  }
+
+  .country-card:hover {
+    background: var(--surface);
+  }
+
+  .country-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .country-card__code {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-3);
+  }
+
+  .country-card__name {
+    font-size: 1.2rem;
+    color: var(--text);
+  }
+
+  .country-card__desc {
+    font-size: 0.82rem;
+    color: var(--text-2);
+    max-width: none;
+    flex: 1;
+  }
+
+  .country-card__stats {
+    display: flex;
+    gap: 2rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+    margin-top: auto;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .stat__val {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat__label {
+    font-size: 0.68rem;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Steps */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .step {
+    border-top: 2px solid var(--border);
+    padding-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .step__num {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 0.05em;
+  }
+
+  .step h3 {
+    font-size: 0.95rem;
+  }
+
+  .step p {
+    font-size: 0.82rem;
+    color: var(--text-2);
+    flex: 1;
+    max-width: none;
+  }
+
+  .link-arrow {
+    font-size: 0.8rem;
+    color: var(--amber);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .link-arrow:hover {
+    opacity: 0.8;
+  }
+
+  /* Why grid */
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .why-item {
+    border-top: 2px solid var(--border);
+    padding-top: 1.25rem;
+  }
+
+  .why-item h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .why-item p {
+    font-size: 0.82rem;
+    color: var(--text-2);
+    max-width: none;
+  }
+
+  /* CTA block */
+  .cta-block {
+    border: 1px solid var(--border);
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+  }
+
+  .cta-block strong {
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .cta-block p {
+    font-size: 0.85rem;
+    color: var(--text-2);
+    max-width: none;
+  }
+
+  .cta-block__btns {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-block;
+    font-family: var(--font);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.7rem 1.4rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .btn--primary {
+    background: var(--amber);
+    color: var(--bg);
+    border-color: var(--amber);
+  }
+
+  .btn--primary:hover {
+    background: #e6b800;
+    color: var(--bg);
+  }
+
+  .btn--ghost {
+    background: transparent;
+    color: var(--text-2);
+    border-color: var(--border-2);
+  }
+
+  .btn--ghost:hover {
+    color: var(--text);
+    border-color: var(--text-3);
+  }
+</style>

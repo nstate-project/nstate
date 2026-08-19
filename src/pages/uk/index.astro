@@ -1,0 +1,405 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+
+<Base
+  title="United Kingdom"
+  description="The nstate UK chapter — auditing British government spending, programme effectiveness, and policy alternatives. Open data, reproducible methods."
+>
+  <div class="container">
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="page-header__breadcrumb">
+        <a href="/">nstate</a> / <span>united kingdom</span>
+      </div>
+      <h1>United Kingdom</h1>
+      <p class="page-header__sub">
+        The first nstate chapter. We are building the data pipelines before publishing any scorecard numbers.
+        Methods, sources, and pipelines are all public.
+      </p>
+      <div class="page-header__meta">
+        <span class="badge badge--amber">active</span>
+        <span class="meta-item">Chapter opened: 2026</span>
+        <span class="meta-item">Scorecards published: <strong>0</strong></span>
+        <span class="meta-item">In pipeline: <strong>3</strong></span>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Data sources -->
+    <section class="section" id="data">
+      <div class="section-label">data sources</div>
+      <h2>where the numbers come from</h2>
+      <p class="section-sub">
+        Every data point in every UK scorecard must trace to one of these sources.
+        No estimates without provenance. No figures from secondary media reporting.
+      </p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>institution</th>
+            <th>what it covers</th>
+            <th>licence</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://www.ons.gov.uk" target="_blank" rel="noopener">ONS</a></td>
+            <td>National accounts, GDP, population, labour market</td>
+            <td>OGL v3</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.gov.uk/government/organisations/hm-revenue-customs" target="_blank" rel="noopener">HMRC</a></td>
+            <td>Tax receipts, reliefs, compliance gap estimates</td>
+            <td>OGL v3</td>
+          </tr>
+          <tr>
+            <td><a href="https://obr.uk" target="_blank" rel="noopener">OBR</a></td>
+            <td>Fiscal forecasts, economic outlook, welfare costing</td>
+            <td>OGL v3</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.gov.uk/government/organisations/department-for-education" target="_blank" rel="noopener">DfE</a></td>
+            <td>School funding, attainment, teacher workforce</td>
+            <td>OGL v3</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.gov.uk/government/organisations/department-for-work-pensions" target="_blank" rel="noopener">DWP</a></td>
+            <td>Benefit caseloads, fraud and error estimates</td>
+            <td>OGL v3</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.ofgem.gov.uk" target="_blank" rel="noopener">Ofgem</a></td>
+            <td>Energy levies, bill components, wholesale prices</td>
+            <td>OGL v3</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.gov.uk/government/organisations/department-for-energy-security-and-net-zero" target="_blank" rel="noopener">DESNZ</a></td>
+            <td>Energy policy costs, subsidy register</td>
+            <td>OGL v3</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.gov.uk/government/organisations/cabinet-office" target="_blank" rel="noopener">Cabinet Office</a></td>
+            <td>Civil service headcount, pay data, workforce statistics</td>
+            <td>OGL v3</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.nao.org.uk" target="_blank" rel="noopener">NAO</a></td>
+            <td>Value for money studies, major project reviews</td>
+            <td>OGL v3</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.oecd.org" target="_blank" rel="noopener">OECD</a></td>
+            <td>International spending comparisons, SOCX welfare data</td>
+            <td>CC BY 4.0</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Scorecards -->
+    <section class="section" id="scorecards">
+      <div class="section-label">scorecards</div>
+      <h2>first wave</h2>
+      <p class="section-sub">
+        Priority areas chosen by: fiscal scale, data availability, benchmarkability,
+        and probability that identified savings are actionable.
+        Scorecards are not published until data pipelines are live and methodology peer-reviewed.
+      </p>
+
+      <div class="scorecard-list">
+        <div class="scorecard-item">
+          <div class="scorecard-item__header">
+            <div>
+              <span class="badge badge--grey">pipeline: building</span>
+              <h3 class="scorecard-item__title">Energy levies on household bills</h3>
+            </div>
+            <div class="scorecard-item__status">pending</div>
+          </div>
+          <p class="scorecard-item__desc">
+            The UK embeds policy costs (renewables obligation, FiT, capacity market,
+            warm home discount) directly into energy bills rather than general taxation.
+            This scorecard will measure the fiscal scale, distributional incidence across
+            income deciles, and compare the approach against Germany, France, and Denmark.
+          </p>
+          <div class="scorecard-item__sources">
+            <span class="source-tag">Ofgem</span>
+            <span class="source-tag">DESNZ</span>
+            <span class="source-tag">OBR</span>
+            <span class="source-tag">IFS</span>
+          </div>
+        </div>
+
+        <div class="scorecard-item">
+          <div class="scorecard-item__header">
+            <div>
+              <span class="badge badge--grey">pipeline: building</span>
+              <h3 class="scorecard-item__title">VAT on independent schools</h3>
+            </div>
+            <div class="scorecard-item__status">pending</div>
+          </div>
+          <p class="scorecard-item__desc">
+            HM Treasury projected revenue from removing the VAT exemption on private school
+            fees. This scorecard will model the fiscal displacement: how many pupils move
+            to state sector, cost to DfE per pupil, teacher supply impact, and OBR's
+            own sensitivity ranges.
+          </p>
+          <div class="scorecard-item__sources">
+            <span class="source-tag">HMRC</span>
+            <span class="source-tag">DfE</span>
+            <span class="source-tag">OBR</span>
+            <span class="source-tag">ONS</span>
+          </div>
+        </div>
+
+        <div class="scorecard-item">
+          <div class="scorecard-item__header">
+            <div>
+              <span class="badge badge--grey">pipeline: queued</span>
+              <h3 class="scorecard-item__title">Civil service headcount growth</h3>
+            </div>
+            <div class="scorecard-item__status">pending</div>
+          </div>
+          <p class="scorecard-item__desc">
+            Civil service headcount and real-terms pay cost, 2000–present, against
+            quantified service delivery metrics where available. Productivity per
+            civil servant vs OECD peers. Departmental breakdown. Consultancy
+            substitution effects.
+          </p>
+          <div class="scorecard-item__sources">
+            <span class="source-tag">Cabinet Office</span>
+            <span class="source-tag">ONS</span>
+            <span class="source-tag">OECD</span>
+            <span class="source-tag">NAO</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Pipeline -->
+    <section class="section" id="pipeline">
+      <div class="section-label">contribute</div>
+      <h2>help build the UK chapter</h2>
+      <div class="contribute-grid">
+        <div class="contribute-item">
+          <h3>data pipelines</h3>
+          <p>Python scripts that fetch, clean, and version ONS/HMRC/OBR datasets to CSV/Parquet. See <code>uk/pipelines/</code>.</p>
+          <a href="https://github.com/nstate-project/nstate/tree/main/uk" class="link-arrow" target="_blank" rel="noopener">view on github →</a>
+        </div>
+        <div class="contribute-item">
+          <h3>scorecard review</h3>
+          <p>Got better data or a methodological challenge? Open a PR with the source and we will update the scorecard.</p>
+          <a href="/contribute" class="link-arrow">contribution guide →</a>
+        </div>
+        <div class="contribute-item">
+          <h3>new scorecard proposals</h3>
+          <p>Open a GitHub issue with the policy, a primary data source, and a proposed counterfactual. We will review it.</p>
+          <a href="https://github.com/nstate-project/nstate/issues" class="link-arrow" target="_blank" rel="noopener">open an issue →</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .page-header {
+    padding: 3rem 0 2rem;
+  }
+
+  .page-header__breadcrumb {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    margin-bottom: 1rem;
+  }
+
+  .page-header__breadcrumb a {
+    color: var(--amber);
+    text-decoration: none;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .page-header__sub {
+    color: var(--text-2);
+    max-width: 55ch;
+    margin-bottom: 1.5rem;
+  }
+
+  .page-header__meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    font-size: 0.78rem;
+    color: var(--text-3);
+  }
+
+  .meta-item strong {
+    color: var(--text);
+  }
+
+  .section {
+    padding: 3rem 0;
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 0.5rem;
+  }
+
+  .section h2 {
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-sub {
+    color: var(--text-2);
+    font-size: 0.88rem;
+    margin-bottom: 2rem;
+    max-width: 65ch;
+  }
+
+  /* Data table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    overflow-x: auto;
+    display: block;
+  }
+
+  .data-table th {
+    text-align: left;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    border-bottom: 1px solid var(--border);
+    padding: 0.6rem 1rem 0.6rem 0;
+  }
+
+  .data-table td {
+    padding: 0.7rem 1rem 0.7rem 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-2);
+    vertical-align: top;
+  }
+
+  .data-table td:first-child a {
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .data-table td:first-child a:hover {
+    color: var(--amber);
+  }
+
+  /* Scorecard list */
+  .scorecard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .scorecard-item {
+    background: var(--bg);
+    padding: 1.75rem;
+  }
+
+  .scorecard-item__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .scorecard-item__title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+  }
+
+  .scorecard-item__status {
+    font-size: 0.7rem;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .scorecard-item__desc {
+    font-size: 0.85rem;
+    color: var(--text-2);
+    margin-bottom: 1rem;
+    max-width: none;
+  }
+
+  .scorecard-item__sources {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .source-tag {
+    font-size: 0.68rem;
+    border: 1px solid var(--border-2);
+    padding: 0.15em 0.5em;
+    color: var(--text-3);
+  }
+
+  /* Contribute grid */
+  .contribute-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .contribute-item {
+    border-top: 2px solid var(--border);
+    padding-top: 1.25rem;
+  }
+
+  .contribute-item h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .contribute-item p {
+    font-size: 0.82rem;
+    color: var(--text-2);
+    margin-bottom: 0.75rem;
+    max-width: none;
+  }
+
+  .link-arrow {
+    font-size: 0.8rem;
+    color: var(--amber);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .link-arrow:hover {
+    color: var(--amber);
+    opacity: 0.8;
+  }
+</style>

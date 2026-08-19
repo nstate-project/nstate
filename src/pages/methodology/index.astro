@@ -1,0 +1,404 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+
+<Base
+  title="Methodology"
+  description="How nstate scores government programmes — the evidence standards, counterfactual methods, and data requirements that make every finding reproducible."
+>
+  <div class="container">
+    <div class="page-header">
+      <div class="breadcrumb">
+        <a href="/">nstate</a> / <span>methodology</span>
+      </div>
+      <h1>Methodology</h1>
+      <p class="page-sub">
+        Every nstate scorecard follows this template. The methodology is the contract:
+        if an analysis deviates from these standards, it is not an nstate scorecard.
+      </p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Scorecard structure -->
+    <section class="section">
+      <div class="section-label">scorecard structure</div>
+      <h2>seven sections, no exceptions</h2>
+      <p class="section-sub">
+        Every published scorecard must complete all seven sections.
+        Sections left blank invalidate the scorecard.
+      </p>
+
+      <div class="method-list">
+        <div class="method-item">
+          <div class="method-item__code">A</div>
+          <div class="method-item__content">
+            <h3>Policy definition</h3>
+            <p>Name, legislation or statutory basis, stated objectives (verbatim from official source), spending classification, temporal scope, and administering department. No paraphrase — exact official language only.</p>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <div class="method-item__code">B</div>
+          <div class="method-item__content">
+            <h3>Observed data</h3>
+            <p>Actual spending, headcount, or output. Every figure requires: primary source URL, data release date, metric definition, and the Python or R pipeline that fetched it. No figures from secondary reporting.</p>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <div class="method-item__code">C</div>
+          <div class="method-item__content">
+            <h3>Counterfactual</h3>
+            <p>What would have happened without the policy, or with an alternative policy. Method hierarchy (in order of preference): direct accounting, difference-in-differences, synthetic control, scenario modelling, descriptive only.</p>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <div class="method-item__code">D</div>
+          <div class="method-item__content">
+            <h3>Impact dimensions</h3>
+            <p>Fiscal impact, economic impact (efficiency/growth effects), delivery performance (targets met, quality, equity), and stated vs observed objectives. Each dimension scored separately.</p>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <div class="method-item__code">E</div>
+          <div class="method-item__content">
+            <h3>Evidence quality</h3>
+            <p>
+              <strong class="ev-high">HIGH</strong> — randomised controlled trial, natural experiment, or peer-reviewed quasi-experimental evidence with pre-registration.<br />
+              <strong class="ev-medium">MEDIUM</strong> — credible observational study with appropriate controls, or official OBR/NAO model.<br />
+              <strong class="ev-low">LOW</strong> — descriptive statistics without causal identification.<br />
+              <strong class="ev-none">NOT MEASURABLE</strong> — insufficient data exists to score this dimension.
+            </p>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <div class="method-item__code">F</div>
+          <div class="method-item__content">
+            <h3>Agent benchmark (Phase 3)</h3>
+            <p>For administrative processes only: estimated cost of current human delivery, estimated cost of deterministic software automation, estimated cost of AI-assisted automation, and evidence quality for each estimate. This section is blank until Phase 3.</p>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <div class="method-item__code">G</div>
+          <div class="method-item__content">
+            <h3>Verdict</h3>
+            <p>Three separate verdicts: fiscal, economic, and delivery. Each is: <span class="badge badge--amber">WASTE</span> · <span class="badge badge--grey">MIXED</span> · <span class="badge badge--green">EFFECTIVE</span> · <span class="badge badge--grey">INSUFFICIENT DATA</span>. No single overall verdict — the dimensions are independent.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Counterfactual hierarchy -->
+    <section class="section">
+      <div class="section-label">counterfactual methods</div>
+      <h2>how we build alternatives</h2>
+      <p class="section-sub">
+        The counterfactual is the hardest part of any policy audit.
+        We follow a strict hierarchy — the lowest level used must be stated explicitly.
+      </p>
+
+      <div class="hierarchy">
+        <div class="hierarchy-item hierarchy-item--1">
+          <span class="hierarchy-item__rank">1 — strongest</span>
+          <h3>Direct accounting</h3>
+          <p>Where spending is directly fungible (e.g. a levy charged at a specific rate with a specific beneficiary), calculate the exact fiscal cost and compare to the next-best alternative using the same accounting standards.</p>
+        </div>
+        <div class="hierarchy-item hierarchy-item--2">
+          <span class="hierarchy-item__rank">2</span>
+          <h3>Difference-in-differences</h3>
+          <p>Compare outcomes in treated vs untreated units before and after the policy, controlling for pre-existing trends. Requires parallel trends assumption to be tested and reported.</p>
+        </div>
+        <div class="hierarchy-item hierarchy-item--3">
+          <span class="hierarchy-item__rank">3</span>
+          <h3>Synthetic control</h3>
+          <p>Construct a weighted combination of comparable countries or regions that match pre-treatment trends. Compare post-treatment divergence.</p>
+        </div>
+        <div class="hierarchy-item hierarchy-item--4">
+          <span class="hierarchy-item__rank">4</span>
+          <h3>Scenario modelling</h3>
+          <p>Where causal identification is not possible, use official forecasting models (OBR, OEF, OECD) with stated assumptions. Sensitivity ranges must be published.</p>
+        </div>
+        <div class="hierarchy-item hierarchy-item--5">
+          <span class="hierarchy-item__rank">5 — weakest</span>
+          <h3>Descriptive only</h3>
+          <p>Where no counterfactual can be credibly constructed, describe the observed data only. Evidence quality is automatically LOW or NOT MEASURABLE. No verdict is issued.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Standards -->
+    <section class="section">
+      <div class="section-label">standards</div>
+      <h2>what every scorecard must meet</h2>
+      <div class="standards-grid">
+        <div class="standard">
+          <h3>no numbers without sources</h3>
+          <p>Every figure requires a source URL, data release date, and the pipeline that fetched it. Figures from secondary media reporting are not permitted.</p>
+        </div>
+        <div class="standard">
+          <h3>no editorialising in scored fields</h3>
+          <p>Sections A–G use objective language. Opinion and advocacy belong in the "analysis" subsection only, clearly labelled as such.</p>
+        </div>
+        <div class="standard">
+          <h3>corrections are mandatory and permanent</h3>
+          <p>Errors are corrected promptly. The original version, the correction, and the reason are all published in the git history. Corrections are never silent.</p>
+        </div>
+        <div class="standard">
+          <h3>right of reply</h3>
+          <p>Any government department, programme manager, or academic may submit a counter-analysis via PR. If it meets methodology standards, it is published alongside the original.</p>
+        </div>
+        <div class="standard">
+          <h3>no targeting individuals</h3>
+          <p>Scorecards target programmes and policies, not individuals. Named officials appear only in a factual capacity (policy lead, minister responsible).</p>
+        </div>
+        <div class="standard">
+          <h3>reproducible by default</h3>
+          <p>Every scorecard has a corresponding data pipeline in the repository. A reader with a laptop must be able to reproduce every figure from primary sources.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-label">inclusion criteria</div>
+      <h2>what qualifies for a scorecard</h2>
+      <p class="section-sub">Five requirements. All must be met before a scorecard enters the pipeline.</p>
+      <ol class="criteria-list">
+        <li>A primary data source exists in an official statistical release (not press release, not media report).</li>
+        <li>The policy has a stated objective against which delivery can be measured.</li>
+        <li>A credible counterfactual exists at Level 3 or above.</li>
+        <li>The fiscal scale exceeds £100m per year, or the policy is a priority area with unusually high public interest.</li>
+        <li>The analysis team includes at least one independent reviewer with no prior stated position on this specific policy.</li>
+      </ol>
+    </section>
+
+    <div class="cta-block">
+      <p>Want to submit a scorecard or challenge an existing one?</p>
+      <a href="/contribute" class="btn btn--primary">contribution guide →</a>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page-header {
+    padding: 3rem 0 2rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    margin-bottom: 1rem;
+  }
+
+  .breadcrumb a {
+    color: var(--amber);
+    text-decoration: none;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .page-sub {
+    color: var(--text-2);
+    max-width: 60ch;
+  }
+
+  .section {
+    padding: 3rem 0;
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 0.5rem;
+  }
+
+  .section h2 {
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-sub {
+    color: var(--text-2);
+    font-size: 0.88rem;
+    margin-bottom: 2rem;
+    max-width: 60ch;
+  }
+
+  /* Method list */
+  .method-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .method-item {
+    background: var(--bg);
+    padding: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .method-item__code {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--amber);
+    min-width: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .method-item__content h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .method-item__content p {
+    font-size: 0.82rem;
+    color: var(--text-2);
+    max-width: none;
+  }
+
+  .ev-high { color: var(--green); }
+  .ev-medium { color: var(--amber); }
+  .ev-low { color: var(--text-3); }
+  .ev-none { color: var(--text-3); }
+
+  /* Hierarchy */
+  .hierarchy {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .hierarchy-item {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .hierarchy-item:last-child {
+    border-bottom: none;
+  }
+
+  .hierarchy-item__rank {
+    font-size: 0.68rem;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .hierarchy-item--1 { border-left: 3px solid var(--green); }
+  .hierarchy-item--2 { border-left: 3px solid #86efac; }
+  .hierarchy-item--3 { border-left: 3px solid var(--amber); }
+  .hierarchy-item--4 { border-left: 3px solid #f97316; }
+  .hierarchy-item--5 { border-left: 3px solid var(--text-3); }
+
+  .hierarchy-item h3 {
+    font-size: 0.95rem;
+  }
+
+  .hierarchy-item p {
+    font-size: 0.82rem;
+    color: var(--text-2);
+    max-width: none;
+  }
+
+  /* Standards grid */
+  .standards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .standard {
+    border-top: 2px solid var(--border);
+    padding-top: 1.25rem;
+  }
+
+  .standard h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .standard p {
+    font-size: 0.82rem;
+    color: var(--text-2);
+    max-width: none;
+  }
+
+  /* Criteria list */
+  .criteria-list {
+    padding-left: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .criteria-list li {
+    font-size: 0.88rem;
+    color: var(--text-2);
+    max-width: 65ch;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-block;
+    font-family: var(--font);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.7rem 1.4rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .btn--primary {
+    background: var(--amber);
+    color: var(--bg);
+    border-color: var(--amber);
+  }
+
+  .btn--primary:hover {
+    background: #e6b800;
+    color: var(--bg);
+    border-color: #e6b800;
+  }
+
+  .cta-block {
+    border: 1px solid var(--border);
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 4rem;
+  }
+
+  .cta-block p {
+    color: var(--text-2);
+    font-size: 0.9rem;
+    max-width: none;
+  }
+</style>

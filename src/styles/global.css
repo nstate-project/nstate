@@ -1,0 +1,114 @@
+@font-face {
+  font-family: 'Berkeley Mono';
+  src: url('/fonts/BerkeleyMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Berkeley Mono';
+  src: url('/fonts/BerkeleyMono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface-2: #1a1a1a;
+  --border: #1f1f1f;
+  --border-2: #2a2a2a;
+  --text: #f0f0f0;
+  --text-2: #9ca3af;
+  --text-3: #6b7280;
+  --amber: #facc15;
+  --amber-dim: #78590a;
+  --green: #22c55e;
+  --green-dim: #14532d;
+  --grey: #4b5563;
+  --font: 'Berkeley Mono', 'Courier New', monospace;
+}
+
+html {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--amber);
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+p {
+  max-width: 65ch;
+}
+
+code {
+  font-family: var(--font);
+  font-size: 0.9em;
+  background: var(--surface);
+  padding: 0.1em 0.4em;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--amber);
+  color: var(--bg);
+}
+
+/* Utility classes */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2em 0.6em;
+  border-radius: 2px;
+}
+
+.badge--amber { background: var(--amber-dim); color: var(--amber); }
+.badge--green { background: var(--green-dim); color: var(--green); }
+.badge--grey  { background: var(--surface-2); color: var(--text-3); }
+.badge--high  { background: var(--green-dim); color: var(--green); }
+.badge--medium { background: var(--amber-dim); color: var(--amber); }
+.badge--low   { background: var(--surface-2); color: var(--text-3); }
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 3rem 0;
+}

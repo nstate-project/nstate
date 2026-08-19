@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+# Berkeley Mono — personal licence, do not distribute
+public/fonts/
+
+# Editor
+.DS_Store
+.idea/
+*.swp
