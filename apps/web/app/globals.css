@@ -1,16 +1,7 @@
-@font-face {
-  font-family: 'Berkeley Mono';
-  src: url('/fonts/BerkeleyMono-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Berkeley Mono';
-  src: url('/fonts/BerkeleyMono-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
+/* Berkeley Mono woff2 files are gitignored (personal licence).
+   Drop BerkeleyMono-Regular.woff2 and BerkeleyMono-Bold.woff2 into
+   apps/web/public/fonts/ to activate the typeface locally or in a
+   private fork. Production falls back to Courier New. */
 
 :root {
   --bg: #0a0a0a;
