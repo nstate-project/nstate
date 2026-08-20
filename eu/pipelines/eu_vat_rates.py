@@ -48,6 +48,14 @@ VAT_RATES = {
     "SE": (25.0, 12.0),
     "SI": (22.0, 9.5),
     "SK": (20.0, 10.0),
+    # EEA/EFTA — not EU members but relevant for cross-country comparison
+    "NO": (25.0, 15.0),  # Norway: standard 25%, reduced 15% (food)
+    "IS": (24.0, 11.0),  # Iceland: standard 24%, reduced 11% (food, accommodation)
+    "CH": (
+        8.1,
+        2.6,
+    ),  # Switzerland: standard 8.1%, reduced 2.6% (food, books); raised Aug 2024
+    "LI": (8.1, 2.6),  # Liechtenstein: in VAT union with Switzerland
 }
 
 DATA_YEAR = 2024
