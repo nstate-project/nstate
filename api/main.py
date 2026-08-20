@@ -1,15 +1,25 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
+from collections import defaultdict, deque
 import duckdb
 import json
 import os
 import logging
+import time
 from agent import answer as agent_answer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nstate")
+
+# In-memory rate limiter: 30 queries/hour per IP
+RATE_LIMIT = 30
+RATE_WINDOW = 3600  # seconds
+_query_log: dict[str, deque] = defaultdict(deque)
+
+GAP_NOTIFY_THRESHOLD = 10  # log admin alert when gap hits this many votes
 
 app = FastAPI(title="nstate API", version="0.1.0")
 
@@ -40,7 +50,7 @@ class QueryRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "time": datetime.utcnow().isoformat()}
+    return {"status": "ok", "time": datetime.now(timezone.utc).isoformat()}
 
 
 @app.get("/datasets")
@@ -130,14 +140,34 @@ def get_finding(finding_id: str):
         }
 
 
+def _check_rate_limit(ip: str) -> bool:
+    """Return True if the IP is within the rate limit, False if exceeded."""
+    now = time.monotonic()
+    q = _query_log[ip]
+    # Drop timestamps older than the window
+    while q and now - q[0] > RATE_WINDOW:
+        q.popleft()
+    if len(q) >= RATE_LIMIT:
+        return False
+    q.append(now)
+    return True
+
+
 @app.post("/query")
 async def query(req: QueryRequest, request: Request):
     """
     Main query endpoint. Takes a plain-English question,
     returns a cited data result.
-    Phase 0: returns structured response showing what we have.
-    Phase 1: adds LLM query agent.
     """
+    ip = request.client.host if request.client else "unknown"
+    if not _check_rate_limit(ip):
+        return JSONResponse(
+            status_code=429,
+            content={
+                "detail": f"Rate limit exceeded. Max {RATE_LIMIT} queries per hour."
+            },
+        )
+
     question = req.question.strip()
     if not question:
         raise HTTPException(status_code=400, detail="Question required")
@@ -151,7 +181,7 @@ async def query(req: QueryRequest, request: Request):
             db.execute(
                 """INSERT INTO meta_queries (question, country, created_at)
                    VALUES (?, ?, ?)""",
-                [question, req.country, datetime.utcnow().isoformat()],
+                [question, req.country, datetime.now(timezone.utc).isoformat()],
             )
         except Exception:
             pass
@@ -214,14 +244,31 @@ async def query(req: QueryRequest, request: Request):
 
 
 def _log_gap(question: str, country: str):
-    """Log a data gap from a failed query."""
+    """Log a data gap and notify admin when vote threshold is crossed."""
     try:
         with get_db() as db:
             db.execute(
                 """INSERT INTO meta_gaps (topic, question_example, country, votes, created_at)
                    VALUES (?, ?, ?, 1, ?)
                    ON CONFLICT (topic, country) DO UPDATE SET votes = votes + 1""",
-                [question[:100], question, country, datetime.utcnow().isoformat()],
+                [
+                    question[:100],
+                    question,
+                    country,
+                    datetime.now(timezone.utc).isoformat(),
+                ],
             )
+            cur = db.execute(
+                "SELECT votes FROM meta_gaps WHERE topic = ? AND country = ?",
+                [question[:100], country],
+            )
+            row = cur.fetchone()
+            if row and row[0] >= GAP_NOTIFY_THRESHOLD:
+                logger.warning(
+                    "ADMIN_ALERT gap_threshold_reached topic=%r country=%s votes=%d",
+                    question[:100],
+                    country,
+                    row[0],
+                )
     except Exception as e:
         logger.warning(f"Gap log failed: {e}")
