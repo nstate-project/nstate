@@ -166,9 +166,15 @@ def review_finding(finding_id: str, action: str, key: str):
     """Approve or reject an automated finding. action: 'approve' | 'reject'."""
     if key != ADMIN_KEY:
         raise HTTPException(status_code=403, detail="Invalid admin key")
-    if action not in ("approve", "reject"):
-        raise HTTPException(status_code=400, detail="action must be approve or reject")
-    new_status = "reviewed_finding" if action == "approve" else "rejected"
+    if action not in ("approve", "reject", "mark_posted"):
+        raise HTTPException(
+            status_code=400, detail="action must be approve | reject | mark_posted"
+        )
+    new_status = {
+        "approve": "reviewed_finding",
+        "reject": "rejected",
+        "mark_posted": "posted",
+    }.get(action, "rejected")
     with get_db() as db:
         db.execute(
             "UPDATE meta_findings SET status = ? WHERE id = ?",

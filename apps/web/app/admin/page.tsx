@@ -95,6 +95,9 @@ export default function AdminPage() {
       <div className="container page-header">
         <h1>Admin — findings review</h1>
         <p>Review and approve automated findings before they enter the public feed.</p>
+        <div className="button-row" style={{ marginTop: '1rem' }}>
+          <a className="button button--secondary" href="/admin/social">social posting queue →</a>
+        </div>
       </div>
       <div className="container">
         <div className="button-row" style={{ marginBottom: '1.5rem', gap: '0.75rem' }}>
