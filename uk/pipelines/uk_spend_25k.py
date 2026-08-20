@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 
 DB_PATH = os.getenv("DB_PATH", "/opt/nstate/data/nstate.duckdb")
-CKAN_SEARCH = "https://data.gov.uk/api/3/action/package_search"
+CKAN_SEARCH = "https://www.data.gov.uk/api/3/action/package_search"
 
 # Search queries → department label
 DEPT_QUERIES = {
@@ -32,7 +32,7 @@ def _ckan_csv_urls(query: str) -> list[str]:
     """Query data.gov.uk CKAN and return CSV resource URLs, newest first."""
     params = {"q": query, "rows": ROWS_PER_DEPT, "sort": "metadata_modified desc"}
     try:
-        r = httpx.get(CKAN_SEARCH, params=params, timeout=20)
+        r = httpx.get(CKAN_SEARCH, params=params, timeout=20, follow_redirects=True)
         r.raise_for_status()
         packages = r.json().get("result", {}).get("results", [])
     except Exception as e:
