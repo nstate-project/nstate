@@ -578,6 +578,29 @@ Journalists and bloggers can embed live charts in their articles. Chart updates 
 - [x] Journalist citation export (academic format)
 - [x] API access (for developers — /developer page + OpenAPI at api.nstate.org/docs)
 
+### Phase 4 — Global Data Expansion (2026-08-20)
+- [x] EU27 + EFTA/EEA country pages (/eu/[code]) — detailed debt, tax, employment, prices for all 31 countries
+- [x] Eurostat PPP price levels — 13 categories, EU27=100, 1995–2024; extended to EFTA + EU candidates + UK, Turkey
+- [x] Eurostat EFTA extension — NO, IS, CH added to employment, tax wedge, tax breakdown pipelines
+- [x] World Bank WDI fiscal data — central govt debt/expenditure/revenue/surplus % GDP; 158 countries, ~8k rows
+- [x] World Bank price levels — PLI USA=100 derived from PPP/XR ratio; ~170 countries, 5.7k rows
+- [x] World Bank country metadata — name, region, income group; 295 WB entries
+- [x] /countries page — world overview grouped by WB region (8 region groups, 158 countries)
+- [x] /country/[code] — dynamic global country page; WB fiscal + PLI + Eurostat tax where available
+- [x] GET /country/{code}/global-stats API — unified endpoint: WB fiscal + PLI + Eurostat tax/VAT/wedge for any country
+- [x] GET /countries/list API — 158 countries with WB data, name, region, income group
+- [x] Systemd auto-refresh timers — EU pipelines annually 1 Oct; global pipelines annually 1 Nov
+- [x] DATA_REGISTRY.md updated with global tables
+
+### Phase 5 — Global Intelligence (next)
+- [ ] Update query agent schema to include wb_fiscal, wb_price_levels, wb_countries — enables "which country has highest debt?" queries
+- [ ] Scorecards: add 2+ new UK policy scorecards (suggested: NHS agency staff spend, HS2 cost overrun)
+- [ ] Benchmark comparator background agent — weekly automated finding comparing UK/EU country metrics against global peers
+- [ ] /countries page: add filter UI (by region, income group) + search by country name
+- [ ] Global country scorecards — automated "X ranks Nth in EU for debt burden" narrative cards per country
+- [ ] docker-compose.yml — full local stack so contributors can self-host (spec §9.4)
+- [ ] CONTRIBUTING.md + COUNTRY-TEMPLATE.md — guide for adding new country chapters (spec §10)
+
 ---
 
 ## 13. Open Questions

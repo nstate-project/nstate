@@ -23,258 +23,7 @@ SONNET = "anthropic/claude-sonnet-4-5"
 
 DB_PATH = os.getenv("DB_PATH", "/opt/nstate/data/nstate.duckdb")
 
-SCHEMA_SUMMARY = """
-Available UK tables (all values OGL v3, sources cited in meta_sources):
-
--- CIVIL SERVICE (Cabinet Office, annual March) --
-uk_civil_service_headcount
-  period DATE          -- 31 March each year (2010–2024)
-  department VARCHAR   -- 'All departments' for UK total
-  headcount INTEGER    -- headcount of civil servants
-  fte DECIMAL          -- full-time equivalent
-
--- INFLATION (ONS, monthly) --
-uk_ons_cpih
-  period_label VARCHAR      -- format: 'Mon-YY' e.g. 'Jan-26'. Latest: 'Jan-26'. Range: Apr-00 to Jan-26.
-  aggregate_code VARCHAR    -- 'CP00' = Overall Index (headline CPIH). 'CP01'='Food'. 'CP04'='Housing'. etc.
-  aggregate_label VARCHAR   -- e.g. 'Overall Index', '01 Food and non-alcoholic beverages'
-  index_value DECIMAL       -- index value (2015=100). Year-on-year % change must be calculated manually.
-  -- WORKING EXAMPLE (inflation rate year-on-year for Jan 2026):
-  --   SELECT curr.period_label, curr.index_value, prev.index_value AS prev_year,
-  --     ROUND(((curr.index_value-prev.index_value)/prev.index_value)*100,1) AS yoy_pct
-  --   FROM uk_ons_cpih curr JOIN uk_ons_cpih prev
-  --     ON prev.aggregate_code='CP00' AND prev.period_label='Jan-25'
-  --   WHERE curr.aggregate_code='CP00' AND curr.period_label='Jan-26'
-  -- NOTE: DO NOT use ORDER BY period_label — text sort is wrong. Filter by exact label like 'Jan-26','Dec-25'.
-
--- LABOUR MARKET (ONS, monthly) --
-uk_ons_labour_market
-  period_label VARCHAR        -- e.g. 'Feb-Apr 2025'
-  unit_of_measure VARCHAR     -- 'Levels' or 'Rates'
-  economic_activity VARCHAR   -- 'Economically Active', 'In Employment', 'Unemployed', 'Economically Inactive'
-  age_group VARCHAR           -- e.g. '16-64', '16-24', '65+'
-  sex VARCHAR                 -- 'All', 'Men', 'Women'
-  seasonal_adjustment VARCHAR -- 'Seasonally Adjusted' or 'Not Seasonally Adjusted'
-  value DECIMAL               -- count (levels) or percentage (rates)
-
--- GDP (ONS, monthly index) --
-uk_ons_gdp
-  period_label VARCHAR   -- e.g. 'Mar-26'
-  industry_code VARCHAR  -- SIC letter e.g. 'A', 'B', 'total-output'
-  industry_label VARCHAR -- e.g. 'A : Agriculture, forestry and fishing'
-  index_value DECIMAL    -- GDP index (2019=100)
-
--- HOUSE PRICES (ONS, by local authority) --
-uk_ons_house_prices
-  year VARCHAR           -- LATEST AVAILABLE: '2022'. Range: '2012'–'2022'. Do NOT query year='2024' or '2023' — no data.
-  month_label VARCHAR    -- abbreviated: 'mar', 'jun', 'sep', 'dec'
-  geography_code VARCHAR -- local authority ONS code e.g. 'E08000028' (331 LAs, no UK-wide row)
-  property_type VARCHAR  -- 'all', 'detached', 'semi-detached', 'terraced', 'flat-maisonette'
-  build_status VARCHAR   -- 'all', 'newly-built', 'existing'
-  measure VARCHAR        -- 'mean', 'median', 'lower-quartile', 'tenth-percentile', 'sales'
-  value DECIMAL          -- GBP price (for price measures) or count (for 'sales')
-  -- NOTE: to get a UK-wide average, use AVG(value) across all geography_codes
-  -- WORKING EXAMPLE (UK average house price, latest data):
-  --   SELECT ROUND(AVG(value),0) AS avg_price FROM uk_ons_house_prices
-  --   WHERE measure='mean' AND year='2022' AND property_type='all' AND build_status='all'
-
--- RETAIL SALES (ONS, monthly) --
-uk_ons_retail_sales
-  period_label VARCHAR        -- e.g. 'Jan-26'
-  sector_code VARCHAR         -- e.g. 'food-stores', 'non-store-retailing'
-  sector_label VARCHAR
-  price_type VARCHAR          -- 'Value of retail sales at current prices' or % change
-  seasonal_adjustment VARCHAR
-  value DECIMAL               -- index value or % change
-
--- PUBLIC/PRIVATE SECTOR WAGES (ONS ASHE, annual) --
-uk_ons_wages
-  year VARCHAR           -- e.g. '2023' (latest)
-  geography_code VARCHAR -- ONS region code e.g. 'E12000001' to 'E12000009' for English regions
-  percentile VARCHAR     -- EXACT VALUES: 'median', '10', '20', '25', '30', '40', '60', '70', '75', '80'
-  sex VARCHAR            -- EXACT VALUES: 'all', 'male', 'female' (lowercase)
-  working_pattern VARCHAR -- EXACT VALUES: 'full-time', 'part-time' (hyphenated lowercase)
-  measure VARCHAR        -- one of: 'weekly-pay-gross' | 'hourly-pay-gross' | 'annual-pay-gross' | 'hourly-pay-excluding-overtime'
-  sector VARCHAR         -- one of: 'all' | 'public-sector' | 'private-sector'  (lowercase, hyphenated — NOT title-case)
-  value DECIMAL          -- GBP amount
--- WORKING EXAMPLE (copy the exact values):
---   SELECT AVG(value) FROM uk_ons_wages
---   WHERE sector='private-sector' AND measure='weekly-pay-gross'
---     AND percentile='median' AND sex='all' AND working_pattern='full-time' AND year='2023'
-
--- HMRC TAX RECEIPTS (HMRC, annual back to 1999) --
-uk_hmrc_tax_receipts
-  year INTEGER            -- fiscal year END: 2026 = April 2025 – March 2026 (most recent complete year). Latest: 2026.
-  tax_category VARCHAR    -- filter by this: 'income_tax','national_insurance','vat','corporation_tax','fuel_duties','stamp_duties','total'
-  measure_label VARCHAR   -- do NOT filter on this; use tax_category instead
-  value_gbpm DECIMAL      -- GBP millions (historical outturn, NOT a projection)
-  -- EXAMPLE: SELECT year, value_gbpm FROM uk_hmrc_tax_receipts WHERE tax_category='income_tax' ORDER BY year DESC LIMIT 1
-  -- NOTE: year=2026 means fiscal 2025-26. This is real collected tax, not a forecast.
-
--- GOVERNMENT SPENDING BY FUNCTION (PESA 2025, HM Treasury) --
-uk_pesa_functional
-  year INTEGER            -- ALWAYS filter year <= 2025 for real data. 2026-2029 are forward plans only.
-  function_name VARCHAR   -- EXACT: 'Health and Social Care','Education','Defence','Transport','Work and Pensions','Total Managed Expenditure'. Use ILIKE '%health%' if unsure.
-  value_gbpm DECIMAL      -- GBP millions
-  -- WORKING EXAMPLE (health spending latest outturn — always add year<=2025 to avoid plan years):
-  --   SELECT year, function_name, value_gbpm FROM uk_pesa_functional
-  --   WHERE function_name='Health and Social Care' AND year<=2025 ORDER BY year DESC LIMIT 1
-
--- GOVERNMENT SPENDING BY DEPARTMENT (PESA 2025, HM Treasury) --
-uk_pesa_departmental
-  year INTEGER              -- financial year
-  department_name VARCHAR   -- e.g. 'NHS England', 'Ministry of Defence', 'DWP'
-  expenditure_type VARCHAR  -- sheet name e.g. 'DEL', 'AME', 'TME'
-  value_gbpm DECIMAL        -- GBP millions
-
--- DWP BENEFIT CLAIMANTS (quarterly) --
-uk_dwp_benefits
-  year VARCHAR              -- e.g. '2024'
-  quarter VARCHAR           -- 'Q1','Q2','Q3','Q4'
-  benefit_name VARCHAR      -- EXACT: 'Universal Credit','Personal Independence Payment','State Pension','Housing Benefit'
-  claimants INTEGER         -- number of claimants
-  annual_cost_gbpm DECIMAL  -- annual cost GBP millions (where available)
-  -- EXAMPLE: SELECT year, quarter, claimants FROM uk_dwp_benefits WHERE benefit_name='Universal Credit' ORDER BY year DESC, quarter DESC LIMIT 1
-
--- GOVERNMENT SPEND OVER £25,000 (monthly, transparency data) --
-uk_spend_25k
-  period_raw VARCHAR    -- date string from source CSV
-  department VARCHAR    -- 'Cabinet Office', 'HMRC', 'DWP', 'Home Office', etc.
-  supplier VARCHAR      -- company or individual receiving payment
-  amount_gbp DECIMAL    -- transaction amount in GBP
-  expense_type VARCHAR  -- category label from dept
-  description VARCHAR   -- free text description
-
--- GOVERNMENT CONTRACTS (Find a Tender, real-time) --
-uk_contracts
-  ocid VARCHAR         -- Open Contracting ID
-  award_date VARCHAR   -- date awarded
-  buyer_name VARCHAR   -- government body
-  supplier_name VARCHAR
-  title VARCHAR        -- contract description
-  value_gbp DECIMAL    -- contract value GBP
-
-meta_datasets -- list of all loaded datasets with row counts
-meta_findings -- published nstate findings
-
--- CROSS-COUNTRY COMPARISONS (Eurostat, 27 EU member states + EU27 average) --
--- Country codes: PT=Portugal, DE=Germany, FR=France, ES=Spain, IT=Italy, --
---   NL=Netherlands, BE=Belgium, AT=Austria, DK=Denmark, SE=Sweden, PL=Poland, --
---   IE=Ireland, EL=Greece, FI=Finland, EU27_2020=EU27 aggregate average --
--- NOTE: UK is NOT in these tables — UK left the EU. --
--- For UK vs EU comparisons, join uk_* tables with eu_* tables using normalised units. --
-
-eu_government_finance  -- Eurostat gov_10a_exp + gov_10dd_edpt1 (annual 1995–2025)
-  country VARCHAR    -- 2-letter ISO (or 'EU27_2020' for EU average)
-  year INTEGER       -- calendar year
-  indicator VARCHAR  -- EXACT: 'expenditure_pct_gdp' | 'deficit_pct_gdp' | 'debt_pct_gdp'
-  value DOUBLE       -- % of GDP (deficit: positive=surplus, negative=borrowing)
-  -- EXAMPLE (PT debt 2023): SELECT value FROM eu_government_finance WHERE country='PT' AND year=2023 AND indicator='debt_pct_gdp'
-  -- EXAMPLE (compare debt 2023): SELECT country, value FROM eu_government_finance WHERE year=2023 AND indicator='debt_pct_gdp' AND country IN ('PT','DE','FR','ES','IT','EU27_2020') ORDER BY value DESC
-  -- EXAMPLE (PT debt trend): SELECT year, value FROM eu_government_finance WHERE country='PT' AND indicator='debt_pct_gdp' ORDER BY year
-
-eu_tax_revenue  -- Eurostat gov_10a_taxag (annual 1995–2025)
-  country VARCHAR
-  year INTEGER
-  value_pct_gdp DOUBLE  -- total tax revenue + social contributions as % GDP
-  -- EXAMPLE: SELECT country, value_pct_gdp FROM eu_tax_revenue WHERE year=2023 AND country IN ('PT','DE','FR','EU27_2020') ORDER BY value_pct_gdp DESC
-
-eu_public_employment  -- Eurostat nama_10_a64_e NACE O-Q (annual 1995–2024)
-  country VARCHAR
-  year INTEGER
-  employment_thousands DOUBLE  -- persons employed in public admin, education, health (thousands)
-  -- EXAMPLE: SELECT country, employment_thousands FROM eu_public_employment WHERE year=2023 AND country IN ('PT','DE','FR') ORDER BY employment_thousands DESC
-
-eu_tax_breakdown  -- Eurostat gov_10a_taxag breakdown by tax type (annual 1995–2025)
-  country VARCHAR
-  year INTEGER
-  indicator VARCHAR  -- EXACT: 'vat_pct_gdp' | 'personal_income_tax_pct_gdp' | 'corporate_tax_pct_gdp' | 'employee_social_contrib_pct_gdp' | 'employer_social_contrib_pct_gdp' | 'excise_duties_pct_gdp'
-  value DOUBLE       -- % of GDP
-  -- EXAMPLE (compare VAT take 2023): SELECT country, value FROM eu_tax_breakdown WHERE year=2023 AND indicator='vat_pct_gdp' AND country NOT LIKE '%EU27%' ORDER BY value DESC
-  -- EXAMPLE (income tax vs VAT for Germany): SELECT indicator, value FROM eu_tax_breakdown WHERE country='DE' AND year=2023 AND indicator IN ('vat_pct_gdp','personal_income_tax_pct_gdp')
-
-eu_labour_tax_wedge  -- Eurostat earn_nt_taxrate — effective % of gross labour cost going to tax (annual)
-  country VARCHAR
-  year INTEGER
-  income_level VARCHAR  -- EXACT: 'AW67' (67% avg wage) | 'AW100' (avg wage) | 'AW125' (125% avg wage)
-  tax_wedge_pct DOUBLE  -- % of gross labour cost (salary + employer contributions) taken by income tax + social contributions
-  -- Single person, no children. Lower = worker keeps more. IE typically ~28%, BE ~40%, DK ~36%.
-  -- EXAMPLE (compare tax burden at avg wage 2022): SELECT country, tax_wedge_pct FROM eu_labour_tax_wedge WHERE year=2022 AND income_level='AW100' ORDER BY tax_wedge_pct DESC
-  -- EXAMPLE (trend for PT at avg wage): SELECT year, tax_wedge_pct FROM eu_labour_tax_wedge WHERE country='PT' AND income_level='AW100' ORDER BY year
-
-eu_tax_rates  -- Statutory tax rates per country (2024, OECD/EC source)
-  country VARCHAR
-  tax_type VARCHAR  -- EXACT: 'personal_top_rate' | 'corporate_rate'
-  rate DOUBLE       -- percentage (e.g. 12.5 = 12.5%)
-  year INTEGER      -- 2024
-  -- EXAMPLE (corporate tax rankings): SELECT country, rate FROM eu_tax_rates WHERE tax_type='corporate_rate' AND year=2024 ORDER BY rate ASC
-  -- EXAMPLE (top income tax comparison): SELECT country, rate FROM eu_tax_rates WHERE tax_type='personal_top_rate' ORDER BY rate DESC
-
-eu_vat_rates  -- Standard and reduced VAT rates (2024, EC source)
-  country VARCHAR
-  standard_rate DOUBLE  -- standard VAT rate % (HU=27 highest, LU=17 lowest)
-  reduced_rate DOUBLE   -- primary reduced rate % (NULL where no reduced rate, e.g. DK)
-  year INTEGER          -- 2024
-  -- EXAMPLE (VAT rankings): SELECT country, standard_rate FROM eu_vat_rates ORDER BY standard_rate DESC
-  -- EXAMPLE (compare VAT + income tax for movers): SELECT v.country, v.standard_rate, r.rate AS top_income_tax FROM eu_vat_rates v JOIN eu_tax_rates r ON v.country=r.country AND r.tax_type='personal_top_rate' ORDER BY v.standard_rate DESC
-
-eu_price_levels  -- Eurostat prc_ppp_ind Comparative Price Level Indices (annual 1995–2024)
-  country VARCHAR  -- 2-letter ISO or 'EU27_2020'
-  year INTEGER
-  category VARCHAR  -- EXACT category codes below
-  pli DOUBLE        -- Price Level Index: EU27_2020=100. Below 100 = cheaper than EU avg; above = more expensive.
-  -- CATEGORIES (use exact code in WHERE clause):
-  --   'GDP'    = Overall price level
-  --   'A0101'  = Food and non-alcoholic beverages
-  --   'A0102'  = Alcoholic beverages and tobacco
-  --   'A0103'  = Clothing and footwear
-  --   'A0104'  = Housing, water, electricity, gas (use for cost-of-living housing comparisons)
-  --   'A0105'  = Household furnishings and equipment
-  --   'A0106'  = Health
-  --   'A0107'  = Transport
-  --   'A0108'  = Communication
-  --   'A0109'  = Recreation and culture
-  --   'A0110'  = Education
-  --   'A0111'  = Restaurants and hotels
-  --   'A0112'  = Miscellaneous goods and services
-  -- INTERPRETATION: IE housing A0104=185.6 means Irish housing costs 85.6% MORE than EU average.
-  --                BG overall GDP=60.4 means Bulgaria is 39.6% CHEAPER than EU average overall.
-  -- EXAMPLE (cheapest housing 2023): SELECT country, pli FROM eu_price_levels WHERE year=2023 AND category='A0104' AND country!='EU27_2020' ORDER BY pli ASC LIMIT 10
-  -- EXAMPLE (all categories for Germany 2023): SELECT category, pli FROM eu_price_levels WHERE country='DE' AND year=2023 ORDER BY pli DESC
-  -- EXAMPLE (food cost comparison, all countries latest): SELECT country, pli FROM eu_price_levels WHERE year=2023 AND category='A0101' ORDER BY pli ASC
-  -- NOTE: eu_price_levels now includes EU27 + EEA/EFTA (NO, IS, CH, LI) + EU candidates (ME, RS, MK, AL, BA, XK, TR) + UK
-
--- GLOBAL DATA (World Bank WDI, CC BY 4.0) --
--- Country codes are ISO2 (e.g. US, GB, JP, CN, IN, BR). Central government data (not general govt).
-
-wb_fiscal  -- World Bank WDI central government fiscal data (annual, ~170 countries, 2000–2024)
-  country VARCHAR  -- ISO2 country code
-  year INTEGER
-  indicator VARCHAR  -- EXACT: 'debt_pct_gdp' | 'expenditure_pct_gdp' | 'revenue_pct_gdp' | 'surplus_pct_gdp'
-  value DOUBLE      -- % of GDP (surplus_pct_gdp: positive = surplus, negative = deficit)
-  -- NOTE: 'central government' not 'general government' — figures are lower than Eurostat EDP.
-  --       Do NOT mix with eu_government_finance figures in the same comparison without noting the difference.
-  -- EXAMPLE (highest debt globally 2022): SELECT country, value FROM wb_fiscal WHERE year=2022 AND indicator='debt_pct_gdp' ORDER BY value DESC LIMIT 15
-  -- EXAMPLE (US fiscal trend): SELECT year, indicator, value FROM wb_fiscal WHERE country='US' AND year>=2010 ORDER BY year, indicator
-  -- EXAMPLE (G7 debt comparison 2022): SELECT country, value FROM wb_fiscal WHERE year=2022 AND indicator='debt_pct_gdp' AND country IN ('US','GB','DE','FR','IT','JP','CA') ORDER BY value DESC
-
-wb_price_levels  -- World Bank WDI price level index (USA=100) annual, ~170 countries
-  country VARCHAR  -- ISO2 country code
-  year INTEGER
-  pli DOUBLE        -- Price Level Index: USA=100. Above 100 = more expensive than USA.
-  -- Derived from PPP conversion factor / official exchange rate (PA.NUS.PPP / PA.NUS.FCRF * 100).
-  -- NOTE: Uses USA=100 base; eu_price_levels uses EU27=100 — different baselines, not directly comparable.
-  -- EXAMPLE (most expensive countries 2022): SELECT country, pli FROM wb_price_levels WHERE year=2022 ORDER BY pli DESC LIMIT 10
-  -- EXAMPLE (price level trend for India): SELECT year, pli FROM wb_price_levels WHERE country='IN' ORDER BY year
-
-wb_countries  -- World Bank country metadata (ISO2, name, region, income group)
-  iso2 VARCHAR PRIMARY KEY
-  iso3 VARCHAR
-  name VARCHAR
-  region VARCHAR       -- e.g. 'Europe & Central Asia', 'Sub-Saharan Africa'
-  income_group VARCHAR -- 'High income' | 'Upper middle income' | 'Lower middle income' | 'Low income'
-  -- EXAMPLE (all high-income countries): SELECT iso2, name FROM wb_countries WHERE income_group='High income' ORDER BY name
-"""
+from schema import SCHEMA_SUMMARY  # noqa: E402
 
 
 def _call(model: str, messages: list, temperature: float = 0.1) -> str:
@@ -312,12 +61,19 @@ def _intent(question: str, country: str) -> dict:
                     "Only set answerable=true if the data is likely in the schema.\n\n"
                     "ROUTING RULES:\n"
                     "- For UK-only questions: use uk_* tables.\n"
-                    "- For questions about Portugal, Germany, France, Spain, Italy, or any EU country: "
-                    "  use eu_government_finance, eu_tax_revenue, and/or eu_public_employment.\n"
-                    "- For cross-country comparisons (UK vs EU country): include BOTH uk_* tables "
-                    "  AND eu_* tables — the agent will join/compare them.\n"
+                    "- For questions about EU countries (any of AT,BE,BG,CY,CZ,DE,DK,EE,EL,ES,FI,FR,HR,HU,IE,IT,LT,LU,LV,MT,NL,PL,PT,RO,SE,SI,SK): "
+                    "  use eu_government_finance, eu_tax_revenue, eu_public_employment, eu_tax_breakdown, eu_labour_tax_wedge, eu_tax_rates, eu_vat_rates, eu_price_levels as relevant.\n"
+                    "- For EFTA/EEA countries (Norway, Iceland, Switzerland, Liechtenstein): "
+                    "  use eu_tax_rates, eu_vat_rates, eu_labour_tax_wedge for tax data; use wb_fiscal for debt/expenditure.\n"
+                    "- For global questions (any non-EU country, e.g. US, Japan, China, India, Brazil, Canada, Australia), "
+                    "  OR questions asking 'which country has the highest/lowest...', 'globally', 'across countries', 'world ranking': "
+                    "  use wb_fiscal (debt/expenditure/revenue/surplus), wb_price_levels (cost of living vs USA), "
+                    "  and/or wb_countries (country names/regions/income groups).\n"
+                    "- For G7, G20, OECD, or global rankings: use wb_fiscal and/or wb_price_levels.\n"
+                    "- For cross-country comparisons mixing UK with non-EU countries: include uk_hmrc_tax_receipts or uk_pesa_functional AND wb_fiscal.\n"
                     "- EU country codes: PT=Portugal, DE=Germany, FR=France, ES=Spain, IT=Italy, "
-                    "  NL=Netherlands, BE=Belgium, AT=Austria, DK=Denmark, SE=Sweden, PL=Poland.\n"
+                    "  NL=Netherlands, BE=Belgium, AT=Austria, DK=Denmark, SE=Sweden, PL=Poland, EL=Greece.\n"
+                    "- Global ISO2 codes: US=USA, GB=UK, JP=Japan, CN=China, IN=India, BR=Brazil, CA=Canada, AU=Australia.\n"
                     "Return raw JSON only, no markdown."
                 ),
             },
@@ -429,16 +185,20 @@ def _narrative(question: str, rows: list[dict], cols: list[str]) -> str:
             {
                 "role": "system",
                 "content": (
-                    "You are a journalist writing for nstate, a UK government transparency platform. "
+                    "You are a journalist writing for nstate, a government transparency platform covering UK, EU, and global data. "
                     "Write 2-3 sentences answering the question using ONLY the numbers in the data. "
                     "Do not invent any numbers. Be direct and factual. No fluff.\n"
                     "IMPORTANT conventions:\n"
                     "- HMRC year integers are fiscal year END: year=2026 means April 2025–March 2026. "
                     "  This is real collected tax revenue, NOT a projection or forecast.\n"
                     "- House price data is latest available (2022). Acknowledge this if asked about recent years.\n"
+                    "- World Bank fiscal data (wb_fiscal) is CENTRAL government, not general government — "
+                    "  figures are typically lower than EU Maastricht/Eurostat general government figures.\n"
+                    "- wb_price_levels uses USA=100 base; eu_price_levels uses EU27=100 — note the base when citing.\n"
                     "- If data is present in the rows, answer the question — do not say 'I cannot answer'.\n"
                     "- Cite source as 'HMRC' for tax data, 'ONS' for economic/wage/price data, "
-                    "'Cabinet Office' for civil service, 'DWP' for benefits, 'HM Treasury' for spending."
+                    "'Cabinet Office' for civil service, 'DWP' for benefits, 'HM Treasury' for spending, "
+                    "'Eurostat' for EU/EFTA data, 'World Bank WDI' for global data."
                 ),
             },
             {"role": "user", "content": f"Question: {question}\n\nData:\n{data_str}"},
@@ -551,6 +311,17 @@ def _key_stat(rows: list[dict], cols: list[str]) -> tuple:
     return None, None
 
 
+def _source_attribution(tables: list) -> str:
+    sources = []
+    if any(t.startswith("uk_") for t in tables):
+        sources.append("ONS / HMRC / Cabinet Office · OGL v3")
+    if any(t.startswith("eu_") for t in tables):
+        sources.append("Eurostat · Eurostat reuse policy")
+    if any(t.startswith("wb_") for t in tables):
+        sources.append("World Bank WDI · CC BY 4.0")
+    return " | ".join(sources) if sources else "nstate"
+
+
 def _gap(question: str, reason: str) -> dict:
     return {"status": "gap", "question": question, "reason": reason}
 
@@ -586,6 +357,6 @@ def answer(question: str, country: str = "uk") -> dict:
         "sql": sql,
         "rows": rows,
         "columns": cols,
-        "source": "Cabinet Office / OBR · OGL v3",
+        "source": _source_attribution(intent.get("tables", [])),
         "created_at": datetime.utcnow().isoformat(),
     }
