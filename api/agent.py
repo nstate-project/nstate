@@ -35,10 +35,17 @@ uk_civil_service_headcount
 
 -- INFLATION (ONS, monthly) --
 uk_ons_cpih
-  period_label VARCHAR      -- e.g. 'Jan-26'
-  aggregate_code VARCHAR    -- ONS category code e.g. 'CP01'
-  aggregate_label VARCHAR   -- e.g. '01 Food and non-alcoholic beverages'
-  index_value DECIMAL       -- index value (2015=100)
+  period_label VARCHAR      -- format: 'Mon-YY' e.g. 'Jan-26'. Latest: 'Jan-26'. Range: Apr-00 to Jan-26.
+  aggregate_code VARCHAR    -- 'CP00' = Overall Index (headline CPIH). 'CP01'='Food'. 'CP04'='Housing'. etc.
+  aggregate_label VARCHAR   -- e.g. 'Overall Index', '01 Food and non-alcoholic beverages'
+  index_value DECIMAL       -- index value (2015=100). Year-on-year % change must be calculated manually.
+  -- WORKING EXAMPLE (inflation rate year-on-year for Jan 2026):
+  --   SELECT curr.period_label, curr.index_value, prev.index_value AS prev_year,
+  --     ROUND(((curr.index_value-prev.index_value)/prev.index_value)*100,1) AS yoy_pct
+  --   FROM uk_ons_cpih curr JOIN uk_ons_cpih prev
+  --     ON prev.aggregate_code='CP00' AND prev.period_label='Jan-25'
+  --   WHERE curr.aggregate_code='CP00' AND curr.period_label='Jan-26'
+  -- NOTE: DO NOT use ORDER BY period_label — text sort is wrong. Filter by exact label like 'Jan-26','Dec-25'.
 
 -- LABOUR MARKET (ONS, monthly) --
 uk_ons_labour_market
@@ -59,13 +66,17 @@ uk_ons_gdp
 
 -- HOUSE PRICES (ONS, by local authority) --
 uk_ons_house_prices
-  year VARCHAR           -- e.g. '2024'
-  month_label VARCHAR    -- e.g. 'September'
-  geography_code VARCHAR -- ONS area code e.g. 'E08000028'
-  property_type VARCHAR  -- 'All', 'Detached', 'Semi-detached', 'Terraced', 'Flat'
-  build_status VARCHAR   -- 'All', 'New build', 'Existing'
-  measure VARCHAR        -- 'sales' (count) or 'mean-price', 'median-price'
-  value DECIMAL          -- count or GBP price
+  year VARCHAR           -- LATEST AVAILABLE: '2022'. Range: '2012'–'2022'. Do NOT query year='2024' or '2023' — no data.
+  month_label VARCHAR    -- abbreviated: 'mar', 'jun', 'sep', 'dec'
+  geography_code VARCHAR -- local authority ONS code e.g. 'E08000028' (331 LAs, no UK-wide row)
+  property_type VARCHAR  -- 'all', 'detached', 'semi-detached', 'terraced', 'flat-maisonette'
+  build_status VARCHAR   -- 'all', 'newly-built', 'existing'
+  measure VARCHAR        -- 'mean', 'median', 'lower-quartile', 'tenth-percentile', 'sales'
+  value DECIMAL          -- GBP price (for price measures) or count (for 'sales')
+  -- NOTE: to get a UK-wide average, use AVG(value) across all geography_codes
+  -- WORKING EXAMPLE (UK average house price, latest data):
+  --   SELECT ROUND(AVG(value),0) AS avg_price FROM uk_ons_house_prices
+  --   WHERE measure='mean' AND year='2022' AND property_type='all' AND build_status='all'
 
 -- RETAIL SALES (ONS, monthly) --
 uk_ons_retail_sales
@@ -78,27 +89,36 @@ uk_ons_retail_sales
 
 -- PUBLIC/PRIVATE SECTOR WAGES (ONS ASHE, annual) --
 uk_ons_wages
-  year VARCHAR           -- e.g. '2024'
-  geography_code VARCHAR -- region code
-  percentile VARCHAR     -- '10', '25', '50', '75', '90', 'mean'
-  sex VARCHAR            -- 'All', 'Male', 'Female'
-  working_pattern VARCHAR -- 'Full-Time', 'Part-Time'
-  measure VARCHAR        -- 'gross-weekly-pay', 'hourly-pay-excl-overtime' etc.
-  sector VARCHAR         -- 'Public sector', 'Private sector'
+  year VARCHAR           -- e.g. '2023' (latest)
+  geography_code VARCHAR -- ONS region code e.g. 'E12000001' to 'E12000009' for English regions
+  percentile VARCHAR     -- EXACT VALUES: 'median', '10', '20', '25', '30', '40', '60', '70', '75', '80'
+  sex VARCHAR            -- EXACT VALUES: 'all', 'male', 'female' (lowercase)
+  working_pattern VARCHAR -- EXACT VALUES: 'full-time', 'part-time' (hyphenated lowercase)
+  measure VARCHAR        -- one of: 'weekly-pay-gross' | 'hourly-pay-gross' | 'annual-pay-gross' | 'hourly-pay-excluding-overtime'
+  sector VARCHAR         -- one of: 'all' | 'public-sector' | 'private-sector'  (lowercase, hyphenated — NOT title-case)
   value DECIMAL          -- GBP amount
+-- WORKING EXAMPLE (copy the exact values):
+--   SELECT AVG(value) FROM uk_ons_wages
+--   WHERE sector='private-sector' AND measure='weekly-pay-gross'
+--     AND percentile='median' AND sex='all' AND working_pattern='full-time' AND year='2023'
 
 -- HMRC TAX RECEIPTS (HMRC, annual back to 1999) --
 uk_hmrc_tax_receipts
-  year INTEGER            -- financial year e.g. 2024
-  tax_category VARCHAR    -- income_tax|national_insurance|vat|corporation_tax|fuel_duties|stamp_duties|total
-  measure_label VARCHAR   -- row label from HMRC table e.g. 'Total Income Tax'
-  value_gbpm DECIMAL      -- GBP millions
+  year INTEGER            -- fiscal year END: 2026 = April 2025 – March 2026 (most recent complete year). Latest: 2026.
+  tax_category VARCHAR    -- filter by this: 'income_tax','national_insurance','vat','corporation_tax','fuel_duties','stamp_duties','total'
+  measure_label VARCHAR   -- do NOT filter on this; use tax_category instead
+  value_gbpm DECIMAL      -- GBP millions (historical outturn, NOT a projection)
+  -- EXAMPLE: SELECT year, value_gbpm FROM uk_hmrc_tax_receipts WHERE tax_category='income_tax' ORDER BY year DESC LIMIT 1
+  -- NOTE: year=2026 means fiscal 2025-26. This is real collected tax, not a forecast.
 
 -- GOVERNMENT SPENDING BY FUNCTION (PESA 2025, HM Treasury) --
 uk_pesa_functional
-  year INTEGER            -- financial year (2014–2027 inc. plans)
-  function_name VARCHAR   -- e.g. 'Health', 'Education', 'Defence', 'Social protection'
-  value_gbpm DECIMAL      -- Total Managed Expenditure, GBP millions
+  year INTEGER            -- ALWAYS filter year <= 2025 for real data. 2026-2029 are forward plans only.
+  function_name VARCHAR   -- EXACT: 'Health and Social Care','Education','Defence','Transport','Work and Pensions','Total Managed Expenditure'. Use ILIKE '%health%' if unsure.
+  value_gbpm DECIMAL      -- GBP millions
+  -- WORKING EXAMPLE (health spending latest outturn — always add year<=2025 to avoid plan years):
+  --   SELECT year, function_name, value_gbpm FROM uk_pesa_functional
+  --   WHERE function_name='Health and Social Care' AND year<=2025 ORDER BY year DESC LIMIT 1
 
 -- GOVERNMENT SPENDING BY DEPARTMENT (PESA 2025, HM Treasury) --
 uk_pesa_departmental
@@ -110,10 +130,11 @@ uk_pesa_departmental
 -- DWP BENEFIT CLAIMANTS (quarterly) --
 uk_dwp_benefits
   year VARCHAR              -- e.g. '2024'
-  quarter VARCHAR           -- 'Q1'–'Q4'
-  benefit_name VARCHAR      -- UC|PIP|Housing Benefit|State Pension|ESA
+  quarter VARCHAR           -- 'Q1','Q2','Q3','Q4'
+  benefit_name VARCHAR      -- EXACT: 'Universal Credit','Personal Independence Payment','State Pension','Housing Benefit'
   claimants INTEGER         -- number of claimants
   annual_cost_gbpm DECIMAL  -- annual cost GBP millions (where available)
+  -- EXAMPLE: SELECT year, quarter, claimants FROM uk_dwp_benefits WHERE benefit_name='Universal Credit' ORDER BY year DESC, quarter DESC LIMIT 1
 
 -- GOVERNMENT SPEND OVER £25,000 (monthly, transparency data) --
 uk_spend_25k
@@ -187,6 +208,46 @@ def _intent(question: str, country: str) -> dict:
         return {"answerable": False, "tables": [], "reason": content}
 
 
+_SQL_VALUE_MAP = [
+    # uk_ons_wages sector (title-case → hyphenated-lowercase)
+    ("'Private sector'", "'private-sector'"),
+    ("'Public sector'", "'public-sector'"),
+    ("'Private Sector'", "'private-sector'"),
+    ("'Public Sector'", "'public-sector'"),
+    # uk_ons_wages measure (old name → new name)
+    ("'gross-weekly-pay'", "'weekly-pay-gross'"),
+    ("'gross-hourly-pay'", "'hourly-pay-gross'"),
+    ("'weekly-pay-excl-overtime'", "'weekly-pay-excluding-overtime'"),
+    ("'hourly-pay-excl-overtime'", "'hourly-pay-excluding-overtime'"),
+    # uk_ons_wages sex
+    ("sex = 'All'", "sex = 'all'"),
+    ("sex = 'Male'", "sex = 'male'"),
+    ("sex = 'Female'", "sex = 'female'"),
+    # uk_ons_wages working_pattern
+    ("'Full-Time'", "'full-time'"),
+    ("'Part-Time'", "'part-time'"),
+    ("'Full-time'", "'full-time'"),
+    ("'Part-time'", "'part-time'"),
+    # uk_ons_wages percentile — 'mean' doesn't exist; 'median' is closest
+    ("percentile = 'mean'", "percentile = 'median'"),
+    ("percentile = 'Mean'", "percentile = 'median'"),
+    # uk_ons_house_prices measure
+    ("'mean-price'", "'mean'"),
+    ("'median-price'", "'median'"),
+    # uk_ons_house_prices month_label
+    ("month_label = 'September'", "month_label = 'sep'"),
+    ("month_label = 'March'", "month_label = 'mar'"),
+    ("month_label = 'June'", "month_label = 'jun'"),
+    ("month_label = 'December'", "month_label = 'dec'"),
+]
+
+
+def _normalise_sql_values(sql: str) -> str:
+    for wrong, right in _SQL_VALUE_MAP:
+        sql = sql.replace(wrong, right)
+    return sql
+
+
 def _generate_sql(question: str, tables: list) -> str:
     """Generate a safe read-only SQL query."""
     table_list = ", ".join(tables) if tables else "uk_civil_service_headcount"
@@ -197,9 +258,10 @@ def _generate_sql(question: str, tables: list) -> str:
                 "role": "system",
                 "content": (
                     "You are a SQL expert for DuckDB. Generate a single SELECT query to answer the question. "
-                    "Rules: SELECT only (no INSERT/UPDATE/DELETE/DROP). "
-                    "Return max 50 rows. Use LIMIT. "
-                    "For totals use 'All departments' in the department column. "
+                    "Rules: SELECT only (no INSERT/UPDATE/DELETE/DROP). Return max 50 rows. Use LIMIT. "
+                    "CRITICAL: Use ONLY the exact string values shown in the schema — copy them character-for-character. "
+                    "Column values are hyphenated-lowercase (e.g. 'private-sector', 'weekly-pay-gross', 'full-time'). "
+                    "Never capitalise or reformat column values. "
                     "Return raw SQL only, no markdown fences, no explanation."
                 ),
             },
@@ -216,6 +278,7 @@ def _generate_sql(question: str, tables: list) -> str:
     # Strip markdown fences if model adds them anyway
     sql = re.sub(r"```sql\s*", "", content)
     sql = re.sub(r"```\s*", "", sql).strip()
+    sql = _normalise_sql_values(sql)
     # Hard block any mutating statements
     if re.search(r"\b(INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE)\b", sql, re.I):
         raise ValueError("Mutating SQL blocked")
@@ -242,8 +305,14 @@ def _narrative(question: str, rows: list[dict], cols: list[str]) -> str:
                 "content": (
                     "You are a journalist writing for nstate, a UK government transparency platform. "
                     "Write 2-3 sentences answering the question using ONLY the numbers in the data. "
-                    "Do not invent any numbers. Cite the source as 'Cabinet Office' or 'OBR' as appropriate. "
-                    "Be direct and factual. No fluff."
+                    "Do not invent any numbers. Be direct and factual. No fluff.\n"
+                    "IMPORTANT conventions:\n"
+                    "- HMRC year integers are fiscal year END: year=2026 means April 2025–March 2026. "
+                    "  This is real collected tax revenue, NOT a projection or forecast.\n"
+                    "- House price data is latest available (2022). Acknowledge this if asked about recent years.\n"
+                    "- If data is present in the rows, answer the question — do not say 'I cannot answer'.\n"
+                    "- Cite source as 'HMRC' for tax data, 'ONS' for economic/wage/price data, "
+                    "'Cabinet Office' for civil service, 'DWP' for benefits, 'HM Treasury' for spending."
                 ),
             },
             {"role": "user", "content": f"Question: {question}\n\nData:\n{data_str}"},
