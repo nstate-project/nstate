@@ -1,11 +1,12 @@
 import Link from 'next/link';
+import HomeAsk from '../components/HomeAsk';
 
 const API = 'https://api.nstate.org';
 
 const stats = [
-  { label: 'UK public spending 2024–25', value: '£1.26tn' },
+  { label: 'countries covered', value: '158' },
+  { label: 'EU member states', value: '27' },
   { label: 'scorecards published', value: '3' },
-  { label: 'countries', value: '1' },
   { label: 'data pipelines', value: '14' },
 ];
 
@@ -46,13 +47,17 @@ export default async function HomePage() {
         <div className="container">
           <h1>Dismantle overreaching, wasteful states.</h1>
           <p>
-            nstate audits every public pound against its stated objective. Open data,
-            reproducible methods, published for everyone.
+            Query UK, EU, and global government data in plain English.
+            158 countries. Every answer backed by official primary sources.
           </p>
-          <div className="button-row">
-            <Link className="button" href="/ask">ask the data →</Link>
-            <Link className="button button--secondary" href="/scorecards">UK scorecards</Link>
-          </div>
+          <HomeAsk />
+          <p style={{ marginTop: '0.75rem', fontSize: '0.8em', color: 'var(--text-3)' }}>
+            <Link href="/scorecards">UK scorecards →</Link>
+            {'  ·  '}
+            <Link href="/countries">158 countries →</Link>
+            {'  ·  '}
+            <Link href="/eu">EU detail →</Link>
+          </p>
         </div>
       </section>
 
