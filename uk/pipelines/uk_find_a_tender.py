@@ -81,22 +81,21 @@ def run():
             [source_id, datetime.utcnow().isoformat()],
         )
 
-        loaded = 0
-        for rel in all_releases:
-            for row in _extract_awards(rel, source_id):
-                try:
-                    db.execute(
-                        """
-                        INSERT OR IGNORE INTO uk_contracts
-                        (ocid, award_date, buyer_name, supplier_name,
-                         title, value_gbp, currency, source_id)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                        list(row),
-                    )
-                    loaded += 1
-                except Exception:
-                    pass
+        db.execute("DELETE FROM uk_contracts WHERE source_id = ?", [source_id])
+        all_rows = [
+            list(row) for rel in all_releases for row in _extract_awards(rel, source_id)
+        ]
+        if all_rows:
+            db.executemany(
+                """
+                INSERT INTO uk_contracts
+                (ocid, award_date, buyer_name, supplier_name,
+                 title, value_gbp, currency, source_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                all_rows,
+            )
+        loaded = len(all_rows)
 
         db.execute(
             """

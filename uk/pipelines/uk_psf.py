@@ -120,13 +120,14 @@ def _write_to_db(records: list, source_id: str) -> None:
             """
         )
         db.execute("DELETE FROM uk_psf_indicators")
+        rows_with_source = [r + (source_id,) for r in records]
         db.executemany(
             """
             INSERT OR REPLACE INTO uk_psf_indicators
             (period_label, period_date, is_monthly, series_code, series_name, value, unit, source_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            records,
+            rows_with_source,
         )
         db.execute(
             """
