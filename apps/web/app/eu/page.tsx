@@ -82,29 +82,15 @@ export default function EuPage() {
             All 27 chapters are open for contribution. EU-wide Eurostat data is loaded for every country — chapters add national detail and scorecards.
           </p>
           <div className="card-list">
-            {COUNTRIES.map((c) => {
-              const isLive = c.code === 'pt';
-              const href = isLive
-                ? `/${c.code}`
-                : `https://github.com/nstate-project/nstate/blob/main/${c.code}/README.md`;
-              return (
-                <a
-                  className="card"
-                  href={href}
-                  key={c.code}
-                  rel={isLive ? undefined : 'noopener noreferrer'}
-                  target={isLive ? undefined : '_blank'}
-                >
-                  <p style={{ marginBottom: '0.25rem' }}>{c.name}</p>
-                  <div className="card__meta">
-                    <span className="badge">{c.code.toUpperCase()}</span>
-                    <span className="badge" style={{ color: isLive ? 'var(--green)' : 'var(--amber)' }}>
-                      {isLive ? 'live ✓' : 'seeking contributors'}
-                    </span>
-                  </div>
-                </a>
-              );
-            })}
+            {COUNTRIES.map((c) => (
+              <a className="card" href={`/eu/${c.code}`} key={c.code}>
+                <p style={{ marginBottom: '0.25rem' }}>{c.name}</p>
+                <div className="card__meta">
+                  <span className="badge">{c.code.toUpperCase()}</span>
+                  <span className="badge" style={{ color: 'var(--green)' }}>live ✓</span>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
       </section>
