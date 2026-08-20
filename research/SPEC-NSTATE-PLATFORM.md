@@ -547,24 +547,24 @@ Journalists and bloggers can embed live charts in their articles. Chart updates 
 ## 12. Build Phases
 
 ### Phase 0 — Foundation (now)
-- [ ] Provision Hetzner VPS (nstate-vps1)
-- [ ] Scaffold Next.js app (replace Astro)
-- [ ] Scaffold FastAPI backend
-- [ ] DuckDB setup + first UK table schema
-- [ ] First UK pipeline: Cabinet Office civil service data
-- [ ] Basic query agent (intent parse → SQL → result)
+- [x] Provision Hetzner VPS (nstate-vps1)
+- [x] Scaffold Next.js app (replace Astro)
+- [x] Scaffold FastAPI backend
+- [x] DuckDB setup + first UK table schema
+- [x] First UK pipeline: Cabinet Office civil service data
+- [x] Basic query agent (intent parse → SQL → result)
 
 ### Phase 1 — Query MVP
-- [ ] Homepage with search box
-- [ ] Query result page + OG image generation
-- [ ] Public query feed (live + popular)
-- [ ] Gap detection + admin notification
-- [ ] 6 UK datasets loaded
-- [ ] Rate limiting + IP-based abuse prevention
+- [x] Homepage with search box
+- [x] Query result page + OG image generation
+- [x] Public query feed (live + popular)
+- [x] Gap detection + admin notification
+- [x] 6 UK datasets loaded (14 loaded)
+- [x] Rate limiting + IP-based abuse prevention
 
 ### Phase 2 — Findings + Social
 - [ ] Background anomaly agents
-- [ ] Findings feed on homepage
+- [x] Findings feed on homepage
 - [ ] Finding review dashboard (admin)
 - [ ] Social posting workflow
 - [ ] EU chapter (Eurostat pipelines)
