@@ -573,8 +573,8 @@ Journalists and bloggers can embed live charts in their articles. Chart updates 
 ### Phase 3 — Community + Scale
 - [x] Gap voting + prioritisation
 - [x] Community review (flag findings, add context)
-- [ ] Second country chapter (de/ stub exists; pipeline pending)
-- [ ] Cross-country comparisons
+- [x] Second country chapter — Portugal (/pt live, Eurostat data 1995–2025)
+- [x] Cross-country comparisons — agent routes to eu_* tables; bar + multi-line charts; /country/{code}/stats API
 - [x] Journalist citation export (academic format)
 - [x] API access (for developers — /developer page + OpenAPI at api.nstate.org/docs)
 

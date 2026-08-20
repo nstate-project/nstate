@@ -1,27 +1,41 @@
-# nstate — Portugal
+# nstate — Portugal (PT)
 
-**Status:** Seeking contributors  
+**Status:** Live — Eurostat data loaded. INE national detail open for contribution.  
 **Chapter lead:** open  
-**Eurostat data:** [loaded EU-wide](/eu/)
+**Live page:** [nstate.org/pt](https://nstate.org/pt)
 
 ---
 
-## How to start this chapter
+## Data loaded
 
-1. Read [COUNTRY-TEMPLATE.md](../COUNTRY-TEMPLATE.md) — it walks through every section
-2. Copy it to `pt/README.md` and replace the template placeholders
-3. Map your key data sources (national statistics office, tax authority, treasury)
-4. Open a PR — the chapter appears on nstate.org once merged
+All data from Eurostat. Updated annually when Eurostat publishes.
 
-## EU-wide data already available
+| Dataset | Eurostat code | Coverage |
+|---|---|---|
+| Govt expenditure / debt / deficit | gov_10dd_edpt1, gov_10a_exp | 1995–2025 |
+| Tax revenue | gov_10a_taxag | 1995–2025 |
+| Public employment (NACE O-Q) | nama_10_a64_e | 1995–2024 |
 
-Eurostat publishes comparable data for Portugal alongside all EU27 countries:
-- Government expenditure as % GDP (Eurostat: `gov_10a_exp`)
-- Government deficit and debt (Eurostat: `gov_10dd_edpt1`)
-- Tax revenue as % GDP (Eurostat: `gov_10a_taxag`)
-- Public sector employment (Eurostat: `nama_10_a64_e`, NACE O-Q)
+## National data (open for contribution)
 
-Use Eurostat country code **PT** to filter for Portugal specifically.
+Portugal's national statistics office is **INE** (Instituto Nacional de Estatística):
+- API: https://www.ine.pt/ine/statistic_information.jsp
+- Key datasets to add:
+  - Employment by sector (LFS microdata equivalent)
+  - Regional GDP (NUT II/III)
+  - Housing prices by municipality (Confidencial Imobiliário / INE)
+  - Government revenue breakdown (DGO — Direção-Geral do Orçamento)
+
+## Key narratives
+
+Portugal had one of the biggest fiscal crises in the EU (2010–2014 IMF bailout, debt peaked ~132% GDP) followed by one of the strongest fiscal recoveries. As of 2025 debt is at ~90% and Portugal is running a budget surplus.
+
+## Contributing
+
+1. Fork the repo and create `pt/pipelines/`
+2. Write a pipeline that fetches from INE or another authoritative Portuguese source
+3. Write to a `pt_<dataset>` table in DuckDB following the naming convention
+4. Submit a PR — the data appears in the agent immediately on merge
 
 ## Questions?
 

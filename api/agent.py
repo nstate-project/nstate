@@ -156,6 +156,34 @@ uk_contracts
 
 meta_datasets -- list of all loaded datasets with row counts
 meta_findings -- published nstate findings
+
+-- CROSS-COUNTRY COMPARISONS (Eurostat, 27 EU member states + EU27 average) --
+-- Country codes: PT=Portugal, DE=Germany, FR=France, ES=Spain, IT=Italy, --
+--   NL=Netherlands, BE=Belgium, AT=Austria, DK=Denmark, SE=Sweden, PL=Poland, --
+--   IE=Ireland, EL=Greece, FI=Finland, EU27_2020=EU27 aggregate average --
+-- NOTE: UK is NOT in these tables — UK left the EU. --
+-- For UK vs EU comparisons, join uk_* tables with eu_* tables using normalised units. --
+
+eu_government_finance  -- Eurostat gov_10a_exp + gov_10dd_edpt1 (annual 1995–2025)
+  country VARCHAR    -- 2-letter ISO (or 'EU27_2020' for EU average)
+  year INTEGER       -- calendar year
+  indicator VARCHAR  -- EXACT: 'expenditure_pct_gdp' | 'deficit_pct_gdp' | 'debt_pct_gdp'
+  value DOUBLE       -- % of GDP (deficit: positive=surplus, negative=borrowing)
+  -- EXAMPLE (PT debt 2023): SELECT value FROM eu_government_finance WHERE country='PT' AND year=2023 AND indicator='debt_pct_gdp'
+  -- EXAMPLE (compare debt 2023): SELECT country, value FROM eu_government_finance WHERE year=2023 AND indicator='debt_pct_gdp' AND country IN ('PT','DE','FR','ES','IT','EU27_2020') ORDER BY value DESC
+  -- EXAMPLE (PT debt trend): SELECT year, value FROM eu_government_finance WHERE country='PT' AND indicator='debt_pct_gdp' ORDER BY year
+
+eu_tax_revenue  -- Eurostat gov_10a_taxag (annual 1995–2025)
+  country VARCHAR
+  year INTEGER
+  value_pct_gdp DOUBLE  -- total tax revenue + social contributions as % GDP
+  -- EXAMPLE: SELECT country, value_pct_gdp FROM eu_tax_revenue WHERE year=2023 AND country IN ('PT','DE','FR','EU27_2020') ORDER BY value_pct_gdp DESC
+
+eu_public_employment  -- Eurostat nama_10_a64_e NACE O-Q (annual 1995–2024)
+  country VARCHAR
+  year INTEGER
+  employment_thousands DOUBLE  -- persons employed in public admin, education, health (thousands)
+  -- EXAMPLE: SELECT country, employment_thousands FROM eu_public_employment WHERE year=2023 AND country IN ('PT','DE','FR') ORDER BY employment_thousands DESC
 """
 
 
@@ -188,10 +216,18 @@ def _intent(question: str, country: str) -> dict:
                 "role": "system",
                 "content": (
                     "You are a data routing assistant for nstate, a government transparency platform. "
-                    "Given a question about UK government data, return JSON with keys: "
+                    "Given a question, return JSON with keys: "
                     '"answerable" (bool), "tables" (list of table names from the schema), '
                     '"reason" (one sentence). '
-                    "Only set answerable=true if the data is likely in the schema. "
+                    "Only set answerable=true if the data is likely in the schema.\n\n"
+                    "ROUTING RULES:\n"
+                    "- For UK-only questions: use uk_* tables.\n"
+                    "- For questions about Portugal, Germany, France, Spain, Italy, or any EU country: "
+                    "  use eu_government_finance, eu_tax_revenue, and/or eu_public_employment.\n"
+                    "- For cross-country comparisons (UK vs EU country): include BOTH uk_* tables "
+                    "  AND eu_* tables — the agent will join/compare them.\n"
+                    "- EU country codes: PT=Portugal, DE=Germany, FR=France, ES=Spain, IT=Italy, "
+                    "  NL=Netherlands, BE=Belgium, AT=Austria, DK=Denmark, SE=Sweden, PL=Poland.\n"
                     "Return raw JSON only, no markdown."
                 ),
             },
@@ -326,10 +362,72 @@ def _chart_spec(question: str, rows: list[dict], cols: list[str]) -> dict | None
     """Return a minimal Vega-Lite spec, or None if not chartable."""
     if not rows or len(rows) < 2:
         return None
-    # Detect time series: has a date/period column + numeric column
+
+    NON_DATA = {"department", "source_id", "indicator", "loaded_at"}
+    has_country = "country" in cols
+    has_year = "year" in cols
+
+    # Cross-country bar chart: country column present, no year (or same year)
+    if has_country and not has_year:
+        num_cols = [
+            c
+            for c in cols
+            if c not in NON_DATA | {"country"}
+            and isinstance(rows[0].get(c), (int, float))
+        ]
+        if num_cols:
+            y_col = num_cols[0]
+            return {
+                "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+                "mark": "bar",
+                "encoding": {
+                    "x": {
+                        "field": "country",
+                        "type": "nominal",
+                        "sort": "-y",
+                        "title": "Country",
+                    },
+                    "y": {
+                        "field": y_col,
+                        "type": "quantitative",
+                        "title": y_col.replace("_", " ").title(),
+                    },
+                },
+                "data": {"values": rows},
+            }
+
+    # Multi-country time series: both country and year present
+    if has_country and has_year:
+        num_cols = [
+            c
+            for c in cols
+            if c not in NON_DATA | {"country", "year"}
+            and isinstance(rows[0].get(c), (int, float))
+        ]
+        if num_cols:
+            y_col = num_cols[0]
+            return {
+                "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+                "mark": "line",
+                "encoding": {
+                    "x": {"field": "year", "type": "quantitative", "title": "Year"},
+                    "y": {
+                        "field": y_col,
+                        "type": "quantitative",
+                        "title": y_col.replace("_", " ").title(),
+                    },
+                    "color": {"field": "country", "type": "nominal"},
+                },
+                "data": {"values": rows},
+            }
+
+    # Single-country time series
     date_col = next((c for c in cols if c in ("period", "date", "year")), None)
     num_cols = [
-        c for c in cols if c not in (date_col, "department", "source_id", "country")
+        c
+        for c in cols
+        if c not in NON_DATA | {date_col, "department", "source_id", "country"}
+        and c is not None
     ]
     if not date_col or not num_cols:
         return None
