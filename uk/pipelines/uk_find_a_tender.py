@@ -11,12 +11,12 @@ import os
 from datetime import datetime
 
 DB_PATH = os.getenv("DB_PATH", "/opt/nstate/data/nstate.duckdb")
-BASE_URL = "https://www.contractsfinder.service.gov.uk/Published/Notice/OCDS/Search"
+BASE_URL = "https://www.contractsfinder.service.gov.uk/Published/Notices/OCDS/Search"
 
 
 def _fetch_page(offset: int, client: httpx.Client) -> list:
     params = {
-        "numFound": 100,
+        "limit": 100,
         "start": offset,
         "order": "dt_published desc",
         "stages": "award",
@@ -75,7 +75,7 @@ def run():
             INSERT OR REPLACE INTO meta_sources
             (id, country, institution, dataset_name, release_url, licence, loaded_at)
             VALUES (?, 'uk', 'Cabinet Office', 'Contracts Finder',
-                    'https://www.contractsfinder.service.gov.uk/Published/Notice/OCDS/Search',
+                    'https://www.contractsfinder.service.gov.uk/Published/Notices/OCDS/Search',
                     'OGL v3', ?)
         """,
             [source_id, datetime.utcnow().isoformat()],
