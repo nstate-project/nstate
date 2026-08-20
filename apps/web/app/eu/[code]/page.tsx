@@ -50,10 +50,23 @@ type CountryStats = {
   vat_reduced_rate: number | null;
 };
 
+type PriceCategory = { pli: number; year: number };
+type CountryPrices = {
+  country: string; name: string;
+  price_levels: Record<string, PriceCategory>;
+};
+
 async function getStats(ucode: string): Promise<CountryStats | null> {
   try {
     const res = await fetch(`${API}/country/${ucode}/stats`, { next: { revalidate: 3600 } });
     return res.ok ? (res.json() as Promise<CountryStats>) : null;
+  } catch { return null; }
+}
+
+async function getPrices(ucode: string): Promise<CountryPrices | null> {
+  try {
+    const res = await fetch(`${API}/country/${ucode}/prices`, { next: { revalidate: 3600 } });
+    return res.ok ? (res.json() as Promise<CountryPrices>) : null;
   } catch { return null; }
 }
 
@@ -214,6 +227,79 @@ function TaxSection({ stats, name }: { stats: CountryStats; name: string }) {
   );
 }
 
+const PRICE_LABELS: Record<string, string> = {
+  GDP: 'Overall price level',
+  A0101: 'Food & non-alcoholic drinks',
+  A0102: 'Alcohol & tobacco',
+  A0103: 'Clothing & footwear',
+  A0104: 'Housing, utilities & energy',
+  A0105: 'Household furnishings',
+  A0106: 'Health',
+  A0107: 'Transport',
+  A0108: 'Communication',
+  A0109: 'Recreation & culture',
+  A0110: 'Education',
+  A0111: 'Restaurants & hotels',
+  A0112: 'Miscellaneous',
+};
+const PRICE_ORDER = ['GDP','A0101','A0104','A0111','A0107','A0106','A0110','A0103','A0109','A0102','A0105','A0108','A0112'];
+
+function PricesSection({ prices, name }: { prices: CountryPrices; name: string }) {
+  const pl = prices.price_levels;
+  const gdp = pl['GDP'];
+  if (!gdp) return null;
+  const cheaper = gdp.pli < 100;
+  const diff = Math.abs(100 - gdp.pli).toFixed(1);
+  return (
+    <section className="section">
+      <div className="container">
+        <h2>Comparative prices</h2>
+        <p style={{ color: 'var(--text-2)', margin: '0.5rem 0 1.25rem' }}>
+          {name} is{' '}
+          <strong style={{ color: cheaper ? 'var(--green)' : '#f87171' }}>
+            {diff}% {cheaper ? 'cheaper' : 'more expensive'}
+          </strong>{' '}
+          than the EU average overall ({gdp.year}). Index: EU27 = 100.
+        </p>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th style={{ textAlign: 'right' }}>Price index</th>
+                <th style={{ textAlign: 'right' }}>vs EU avg</th>
+              </tr>
+            </thead>
+            <tbody>
+              {PRICE_ORDER.map((cat) => {
+                const entry = pl[cat];
+                if (!entry) return null;
+                const label = PRICE_LABELS[cat] ?? cat;
+                const vs = entry.pli - 100;
+                const cc = vs < 0 ? 'var(--green)' : vs > 0 ? '#f87171' : 'var(--text-3)';
+                return (
+                  <tr key={cat}>
+                    <td>{label}</td>
+                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                      {entry.pli.toFixed(1)}
+                    </td>
+                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: cc }}>
+                      {vs > 0 ? '+' : ''}{vs.toFixed(1)}%
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p style={{ color: 'var(--text-3)', fontSize: '0.78em', marginTop: '0.75rem' }}>
+          Source: Eurostat prc_ppp_ind. EU27_2020 = 100. Green = cheaper than EU average.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function QuestionsSection({ name }: { name: string }) {
   const qs = [
     `How has ${name}'s government debt changed since 2010?`,
@@ -252,6 +338,10 @@ function DataSources() {
               <tr><td>Govt expenditure / debt / deficit</td><td>Eurostat gov_10dd_edpt1</td><td>1995–2025</td></tr>
               <tr><td>Tax revenue</td><td>Eurostat gov_10a_taxag</td><td>1995–2025</td></tr>
               <tr><td>Public employment (NACE O-Q)</td><td>Eurostat nama_10_a64_e</td><td>1995–2024</td></tr>
+              <tr><td>Tax breakdown (VAT, income, social)</td><td>Eurostat gov_10a_taxag</td><td>2000–2023</td></tr>
+              <tr><td>Labour tax wedge</td><td>Eurostat earn_nt_taxrate</td><td>2000–2023</td></tr>
+              <tr><td>Statutory tax rates (income, corporate, VAT)</td><td>OECD / EC Taxation Trends 2024</td><td>2024</td></tr>
+              <tr><td>Comparative price levels (13 categories)</td><td>Eurostat prc_ppp_ind</td><td>1995–2024</td></tr>
             </tbody>
           </table>
         </div>
@@ -271,16 +361,16 @@ export default async function CountryChapterPage(
   const name = EU27[ucode];
   if (!name) notFound();
 
-  const stats = await getStats(ucode);
+  const [stats, prices] = await Promise.all([getStats(ucode), getPrices(ucode)]);
 
   return (
     <>
       <div className="container page-header">
         <h1>{name}</h1>
         <p>
-          Government finance data from{' '}
+          Government finance and cost-of-living data from{' '}
           <a href="https://ec.europa.eu/eurostat" rel="noopener noreferrer" target="_blank">Eurostat</a>
-          {' '}— spending, debt, tax revenue, and public employment.
+          {' '}— spending, debt, tax, and comparative prices.
         </p>
         <div className="button-row" style={{ marginTop: '1rem' }}>
           <Link className="button" href={`/ask?q=${encodeURIComponent(`How does ${name}'s government debt compare to the EU average?`)}`}>
@@ -293,6 +383,7 @@ export default async function CountryChapterPage(
       </div>
       {stats && <HeadlineStats stats={stats} />}
       {stats && <TaxSection stats={stats} name={name} />}
+      {prices && <PricesSection prices={prices} name={name} />}
       {stats && <DebtTable series={stats.debt_series} />}
       <QuestionsSection name={name} />
       <DataSources />

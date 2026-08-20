@@ -511,6 +511,27 @@ def country_stats(code: str):
     }
 
 
+@app.get("/country/{code}/prices")
+def country_prices(code: str):
+    """Return comparative price level indices for an EU country (Eurostat prc_ppp_ind)."""
+    code = code.upper()
+    if code not in COUNTRY_NAMES:
+        raise HTTPException(status_code=404, detail=f"Country '{code}' not in EU27")
+    with get_db() as db:
+        cur = db.execute(
+            """SELECT category, pli, year FROM eu_price_levels
+               WHERE country = ?
+               ORDER BY category, year DESC""",
+            [code],
+        )
+        rows = rows_to_dicts(cur)
+    latest: dict[str, dict] = {}
+    for r in rows:
+        if r["category"] not in latest:
+            latest[r["category"]] = {"pli": r["pli"], "year": r["year"]}
+    return {"country": code, "name": COUNTRY_NAMES[code], "price_levels": latest}
+
+
 def _log_gap(question: str, country: str) -> tuple[str, int]:
     """Log a data gap, notify admin when threshold crossed. Returns (topic, votes)."""
     topic = question[:100]
