@@ -6,8 +6,8 @@ The UK national audit. Every scorecard uses the standard [methodology](../METHOD
 
 | Policy | Area | Status | Evidence quality |
 |---|---|---|---|
-| Net Zero energy levies | Energy | Pipeline needed | HIGH (data exists) |
-| VAT on independent schools | Education | Pipeline needed | HIGH (data exists) |
+| Net Zero energy levies | Energy | [Published](scorecards/net-zero-energy-levies.md) | HIGH |
+| VAT on independent schools | Education | [Published](scorecards/vat-on-independent-schools.md) | HIGH |
 | Civil service expansion | Public sector | [Published](scorecards/civil-service-expansion.md) | HIGH |
 
 ## Priority next scorecards
