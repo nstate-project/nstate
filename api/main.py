@@ -140,6 +140,43 @@ def get_finding(finding_id: str):
         }
 
 
+ADMIN_KEY = os.getenv("NSTATE_ADMIN_KEY", "nstate-admin-2026")
+
+
+@app.get("/admin/findings")
+def admin_findings(key: str, status: str = "automated_finding", limit: int = 50):
+    """Admin: list findings pending review."""
+    if key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    with get_db() as db:
+        cur = db.execute(
+            """SELECT id, country, question, headline, key_stat_value, key_stat_unit,
+                      status, created_at
+               FROM meta_findings
+               WHERE status = ?
+               ORDER BY created_at DESC
+               LIMIT ?""",
+            [status, limit],
+        )
+        return {"findings": rows_to_dicts(cur)}
+
+
+@app.patch("/findings/{finding_id}/review")
+def review_finding(finding_id: str, action: str, key: str):
+    """Approve or reject an automated finding. action: 'approve' | 'reject'."""
+    if key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    if action not in ("approve", "reject"):
+        raise HTTPException(status_code=400, detail="action must be approve or reject")
+    new_status = "reviewed_finding" if action == "approve" else "rejected"
+    with get_db() as db:
+        db.execute(
+            "UPDATE meta_findings SET status = ? WHERE id = ?",
+            [new_status, finding_id],
+        )
+    return {"ok": True, "id": finding_id, "status": new_status}
+
+
 def _check_rate_limit(ip: str) -> bool:
     """Return True if the IP is within the rate limit, False if exceeded."""
     now = time.monotonic()

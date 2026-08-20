@@ -533,3 +533,10 @@ th {
     flex-direction: column;
   }
 }
+
+/* Embed widget — hide chrome when .embed-root is present */
+.embed-root ~ * { display: none; }
+body:has(.embed-root) nav,
+body:has(.embed-root) footer { display: none; }
+body:has(.embed-root) main { padding: 0; }
+.embed-root { width: 100%; }
