@@ -456,6 +456,40 @@ def country_stats(code: str):
             for r in rows_to_dicts(cur5):
                 eu_avg[r["indicator"]] = r["value"]
 
+        # Tax breakdown (latest year per indicator)
+        cur6 = db.execute(
+            """SELECT indicator, value, year FROM eu_tax_breakdown
+               WHERE country = ? ORDER BY indicator, year DESC""",
+            [code],
+        )
+        tax_breakdown: dict[str, dict] = {}
+        for r in rows_to_dicts(cur6):
+            if r["indicator"] not in tax_breakdown:
+                tax_breakdown[r["indicator"]] = {"value": r["value"], "year": r["year"]}
+
+        # Labour tax wedge at average wage (latest)
+        cur7 = db.execute(
+            """SELECT tax_wedge_pct, year FROM eu_labour_tax_wedge
+               WHERE country = ? AND income_level = 'AW100'
+               ORDER BY year DESC LIMIT 1""",
+            [code],
+        )
+        wedge_row = cur7.fetchone()
+
+        # Statutory tax rates
+        cur8 = db.execute(
+            "SELECT tax_type, rate FROM eu_tax_rates WHERE country = ? AND year = 2024",
+            [code],
+        )
+        tax_rates = {r["tax_type"]: r["rate"] for r in rows_to_dicts(cur8)}
+
+        # VAT rates
+        cur9 = db.execute(
+            "SELECT standard_rate, reduced_rate FROM eu_vat_rates WHERE country = ? ORDER BY year DESC LIMIT 1",
+            [code],
+        )
+        vat_row = cur9.fetchone()
+
     return {
         "country": code,
         "name": COUNTRY_NAMES[code],
@@ -467,6 +501,13 @@ def country_stats(code: str):
         "tax_revenue_year": tax_row[1] if tax_row else None,
         "public_employment_thousands": empl_row[0] if empl_row else None,
         "public_employment_year": empl_row[1] if empl_row else None,
+        "tax_breakdown": tax_breakdown,
+        "labour_tax_wedge_pct": wedge_row[0] if wedge_row else None,
+        "labour_tax_wedge_year": wedge_row[1] if wedge_row else None,
+        "corporate_tax_rate": tax_rates.get("corporate_rate"),
+        "personal_top_rate": tax_rates.get("personal_top_rate"),
+        "vat_standard_rate": vat_row[0] if vat_row else None,
+        "vat_reduced_rate": vat_row[1] if vat_row else None,
     }
 
 
