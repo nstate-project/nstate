@@ -15,6 +15,7 @@ const EXAMPLES = [
 type QueryResponse = {
   chart_spec?: Record<string, unknown>;
   columns?: string[];
+  id?: string;
   key_stat_unit?: string;
   key_stat_value?: number;
   narrative?: string;
@@ -86,6 +87,11 @@ function Results({ result, chartRef }: { result: QueryResponse; chartRef: RefObj
       )}
       {result.source && (
         <div className="result-block"><div className="result-label">source</div><p>{result.source}</p></div>
+      )}
+      {result.id && (
+        <div className="result-block">
+          <a className="button button--secondary" href={`/f/${result.id}`}>share this result →</a>
+        </div>
       )}
     </div>
   );

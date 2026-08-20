@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
 import duckdb
+import json
 import os
 import logging
 from agent import answer as agent_answer
@@ -99,15 +100,34 @@ def get_findings(country: str = "uk", status: str = None, limit: int = 20):
         return {"findings": rows_to_dicts(cur)}
 
 
+@app.get("/findings/recent")
+def get_findings_recent(country: str = "uk", limit: int = 10):
+    """Return most recent query findings (alias for /findings)."""
+    return get_findings(country=country, limit=limit)
+
+
 @app.get("/findings/{finding_id}")
 def get_finding(finding_id: str):
-    """Return a single finding by ID."""
+    """Return a single finding by ID, normalised to match /query response shape."""
     with get_db() as db:
         cur = db.execute("SELECT * FROM meta_findings WHERE id = ?", [finding_id])
         rows = rows_to_dicts(cur)
         if not rows:
             raise HTTPException(status_code=404, detail="Finding not found")
-        return rows[0]
+        row = rows[0]
+        chart = row.get("chart_spec")
+        if isinstance(chart, str):
+            try:
+                chart = json.loads(chart)
+            except Exception:
+                chart = None
+        return {
+            **row,
+            "status": "ok",
+            "narrative": row.get("explanation") or row.get("headline", ""),
+            "sql": row.get("sql_query"),
+            "chart_spec": chart,
+        }
 
 
 @app.post("/query")
@@ -170,8 +190,8 @@ async def query(req: QueryRequest, request: Request):
                 db.execute(
                     """INSERT INTO meta_findings
                        (id, country, question, headline, explanation,
-                        key_stat_value, key_stat_unit, status, sql_query, created_at)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, 'automated_finding', ?, ?)""",
+                        key_stat_value, key_stat_unit, status, sql_query, chart_spec, created_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, 'automated_finding', ?, ?, ?)""",
                     [
                         result["id"],
                         req.country,
@@ -181,6 +201,9 @@ async def query(req: QueryRequest, request: Request):
                         result.get("key_stat_value"),
                         result.get("key_stat_unit"),
                         result.get("sql"),
+                        json.dumps(result["chart_spec"])
+                        if result.get("chart_spec")
+                        else None,
                         result.get("created_at"),
                     ],
                 )
