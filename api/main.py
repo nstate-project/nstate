@@ -1,10 +1,12 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from collections import defaultdict, deque
+import csv
 import duckdb
+import io
 import json
 import os
 import logging
@@ -183,6 +185,83 @@ def review_finding(finding_id: str, action: str, key: str):
     return {"ok": True, "id": finding_id, "status": new_status}
 
 
+@app.get("/findings/{finding_id}/export.csv")
+def export_finding_csv(finding_id: str):
+    """Download finding data as CSV. Re-executes stored SQL to produce fresh rows."""
+    with get_db() as db:
+        cur = db.execute(
+            "SELECT sql_query, question FROM meta_findings WHERE id = ?", [finding_id]
+        )
+        rows = rows_to_dicts(cur)
+        if not rows:
+            raise HTTPException(status_code=404, detail="Finding not found")
+        sql = rows[0].get("sql_query")
+        question = rows[0].get("question", "")
+
+    output = io.StringIO()
+    w = csv.writer(output)
+    w.writerow(["# nstate finding", finding_id])
+    w.writerow(["# source", f"https://nstate.org/f/{finding_id}"])
+    w.writerow(["# question", question])
+    w.writerow([])
+
+    if sql:
+        with get_db() as db:
+            data_cur = db.execute(sql)
+            cols = [d[0] for d in data_cur.description]
+            w.writerow(cols)
+            for row in data_cur.fetchall():
+                w.writerow(list(row))
+    else:
+        w.writerow(["question"])
+        w.writerow([question])
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="nstate-{finding_id}.csv"',
+            "Access-Control-Allow-Origin": "*",
+        },
+    )
+
+
+class FlagRequest(BaseModel):
+    flag_type: str
+    note: str = ""
+
+
+@app.post("/findings/{finding_id}/flag")
+def flag_finding(finding_id: str, req: FlagRequest):
+    """Flag a finding as incorrect, outdated, misleading, or other."""
+    if req.flag_type not in ("incorrect", "outdated", "misleading", "other"):
+        raise HTTPException(
+            status_code=400,
+            detail="flag_type must be incorrect|outdated|misleading|other",
+        )
+    with get_db() as db:
+        db.execute(
+            """CREATE TABLE IF NOT EXISTS meta_finding_flags (
+               finding_id VARCHAR NOT NULL,
+               flag_type VARCHAR NOT NULL,
+               note VARCHAR,
+               created_at VARCHAR NOT NULL
+            )"""
+        )
+        db.execute(
+            """INSERT INTO meta_finding_flags (finding_id, flag_type, note, created_at)
+               VALUES (?, ?, ?, ?)""",
+            [
+                finding_id,
+                req.flag_type,
+                req.note[:500],
+                datetime.now(timezone.utc).isoformat(),
+            ],
+        )
+    logger.info("Finding flagged: %s as %s", finding_id, req.flag_type)
+    return {"ok": True}
+
+
 def _check_rate_limit(ip: str) -> bool:
     """Return True if the IP is within the rate limit, False if exceeded."""
     now = time.monotonic()
@@ -238,12 +317,14 @@ async def query(req: QueryRequest, request: Request):
         has_data = len(datasets) > 0
 
     if not has_data:
-        _log_gap(question, req.country)
+        topic, votes = _log_gap(question, req.country)
         return {
             "status": "gap",
             "question": question,
             "message": "We don't have this data loaded yet.",
             "gap_logged": True,
+            "topic": topic,
+            "votes": votes,
         }
 
     # Run the query agent
@@ -254,7 +335,9 @@ async def query(req: QueryRequest, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
     if result["status"] == "gap":
-        _log_gap(question, req.country)
+        topic, votes = _log_gap(question, req.country)
+        result["topic"] = topic
+        result["votes"] = votes
 
     # Persist finding if agent returned a result
     if result["status"] == "ok":
@@ -286,32 +369,31 @@ async def query(req: QueryRequest, request: Request):
     return result
 
 
-def _log_gap(question: str, country: str):
-    """Log a data gap and notify admin when vote threshold is crossed."""
+def _log_gap(question: str, country: str) -> tuple[str, int]:
+    """Log a data gap, notify admin when threshold crossed. Returns (topic, votes)."""
+    topic = question[:100]
     try:
         with get_db() as db:
             db.execute(
                 """INSERT INTO meta_gaps (topic, question_example, country, votes, created_at)
                    VALUES (?, ?, ?, 1, ?)
                    ON CONFLICT (topic, country) DO UPDATE SET votes = votes + 1""",
-                [
-                    question[:100],
-                    question,
-                    country,
-                    datetime.now(timezone.utc).isoformat(),
-                ],
+                [topic, question, country, datetime.now(timezone.utc).isoformat()],
             )
             cur = db.execute(
                 "SELECT votes FROM meta_gaps WHERE topic = ? AND country = ?",
-                [question[:100], country],
+                [topic, country],
             )
             row = cur.fetchone()
-            if row and row[0] >= GAP_NOTIFY_THRESHOLD:
+            votes = row[0] if row else 1
+            if votes >= GAP_NOTIFY_THRESHOLD:
                 logger.warning(
                     "ADMIN_ALERT gap_threshold_reached topic=%r country=%s votes=%d",
-                    question[:100],
+                    topic,
                     country,
-                    row[0],
+                    votes,
                 )
+            return topic, votes
     except Exception as e:
         logger.warning(f"Gap log failed: {e}")
+        return topic, 1

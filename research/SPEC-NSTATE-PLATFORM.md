@@ -563,20 +563,20 @@ Journalists and bloggers can embed live charts in their articles. Chart updates 
 - [x] Rate limiting + IP-based abuse prevention
 
 ### Phase 2 — Findings + Social
-- [ ] Background anomaly agents
+- [x] Background anomaly agents
 - [x] Findings feed on homepage
-- [ ] Finding review dashboard (admin)
-- [ ] Social posting workflow
-- [ ] EU chapter (Eurostat pipelines)
-- [ ] Embed widget
+- [x] Finding review dashboard (admin)
+- [x] Social posting workflow
+- [x] EU chapter (Eurostat pipelines — 4,257 rows, 27 countries)
+- [x] Embed widget
 
 ### Phase 3 — Community + Scale
-- [ ] Gap voting + prioritisation
-- [ ] Community review (flag findings, add context)
-- [ ] Second country chapter
+- [x] Gap voting + prioritisation
+- [x] Community review (flag findings, add context)
+- [ ] Second country chapter (de/ stub exists; pipeline pending)
 - [ ] Cross-country comparisons
-- [ ] Journalist citation export (academic format)
-- [ ] API access (for developers)
+- [x] Journalist citation export (academic format)
+- [x] API access (for developers — /developer page + OpenAPI at api.nstate.org/docs)
 
 ---
 

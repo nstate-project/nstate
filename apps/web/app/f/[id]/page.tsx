@@ -1,7 +1,10 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { CitationCopy } from './CitationCopy';
+import { FlagFinding } from './FlagFinding';
 
 const API = 'https://api.nstate.org';
+const SITE = 'https://nstate.org';
 
 type Finding = {
   id: string;
@@ -37,6 +40,16 @@ export default async function FindingPage({ params }: { params: Promise<{ id: st
   const f = await getFinding(id);
   if (!f) notFound();
 
+  const year = f.created_at
+    ? new Date(f.created_at).getFullYear()
+    : new Date().getFullYear();
+  const accessed = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const citation = `nstate (${year}). "${f.question}". ${SITE}/f/${id}. Accessed ${accessed}.`;
+
   return (
     <div className="container">
       <div className="page-header">
@@ -66,8 +79,31 @@ export default async function FindingPage({ params }: { params: Promise<{ id: st
           </details>
         )}
 
+        <section className="result-block">
+          <div className="result-label">cite</div>
+          <p style={{ color: 'var(--text-2)', fontSize: '0.9em', marginBottom: '0.75rem' }}>
+            {citation}
+          </p>
+          <div className="button-row" style={{ gap: '0.75rem', flexWrap: 'wrap' }}>
+            <CitationCopy text={citation} />
+            {f.sql && (
+              <a
+                className="button button--secondary"
+                href={`${API}/findings/${id}/export.csv`}
+                style={{ fontSize: '0.85em' }}
+              >
+                download CSV ↓
+              </a>
+            )}
+          </div>
+        </section>
+
         <div className="result-block">
           <a className="button button--secondary" href="/ask">← ask another question</a>
+        </div>
+
+        <div className="result-block" style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+          <FlagFinding id={id} />
         </div>
       </div>
     </div>

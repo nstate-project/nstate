@@ -24,6 +24,8 @@ type QueryResponse = {
   source?: string;
   sql?: string;
   status?: 'ok' | 'gap';
+  topic?: string;
+  votes?: number;
 };
 
 declare global {
@@ -57,6 +59,47 @@ function DataTable({ rows, columns }: { rows: Record<string, unknown>[]; columns
         </table>
       </div>
     </section>
+  );
+}
+
+function GapState({ result }: { result: QueryResponse }) {
+  const [votes, setVotes] = useState(result.votes ?? 0);
+  const [voted, setVoted] = useState(false);
+
+  async function vote() {
+    if (voted || !result.topic) return;
+    setVoted(true);
+    setVotes((v) => v + 1);
+    await fetch(
+      `https://api.nstate.org/gaps/vote?topic=${encodeURIComponent(result.topic)}`,
+      { method: 'POST' },
+    );
+  }
+
+  return (
+    <div className="gap-state">
+      <div className="gap-state__circle">○</div>
+      <p>{result.reason ?? "We don't have this data yet."}</p>
+      <p style={{ color: 'var(--text-2)', fontSize: '0.9em', marginTop: '0.5rem' }}>
+        {votes > 1 && <span>{votes} others have asked.{' '}</span>}
+        {!voted ? (
+          <button
+            className="button button--secondary"
+            disabled={!result.topic}
+            onClick={vote}
+            style={{ fontSize: '0.82em', padding: '0.2rem 0.55rem' }}
+            type="button"
+          >
+            vote to prioritise
+          </button>
+        ) : (
+          <span style={{ color: 'var(--green)' }}>✓ voted</span>
+        )}
+      </p>
+      <p style={{ color: 'var(--text-3)', fontSize: '0.82em', marginTop: '0.25rem' }}>
+        <a href="/gaps">see all data gaps →</a>
+      </p>
+    </div>
   );
 }
 
@@ -184,12 +227,7 @@ export default function AskPage() {
         </div>
         {state === 'loading' && <div className="loading">querying...</div>}
         {state === 'error' && <div className="error-state">Could not reach the API. Check your connection.</div>}
-        {result?.status === 'gap' && (
-          <div className="gap-state">
-            <div className="gap-state__circle">○</div>
-            <p>{result.reason ?? 'Data not available.'}</p>
-          </div>
-        )}
+        {result?.status === 'gap' && <GapState result={result} />}
         {result?.status !== 'gap' && result && <Results result={result} chartRef={chartRef} />}
       </div>
     </>
