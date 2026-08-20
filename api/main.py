@@ -369,6 +369,107 @@ async def query(req: QueryRequest, request: Request):
     return result
 
 
+COUNTRY_NAMES = {
+    "AT": "Austria",
+    "BE": "Belgium",
+    "BG": "Bulgaria",
+    "CY": "Cyprus",
+    "CZ": "Czechia",
+    "DE": "Germany",
+    "DK": "Denmark",
+    "EE": "Estonia",
+    "EL": "Greece",
+    "ES": "Spain",
+    "FI": "Finland",
+    "FR": "France",
+    "HR": "Croatia",
+    "HU": "Hungary",
+    "IE": "Ireland",
+    "IT": "Italy",
+    "LT": "Lithuania",
+    "LU": "Luxembourg",
+    "LV": "Latvia",
+    "MT": "Malta",
+    "NL": "Netherlands",
+    "PL": "Poland",
+    "PT": "Portugal",
+    "RO": "Romania",
+    "SE": "Sweden",
+    "SI": "Slovenia",
+    "SK": "Slovakia",
+}
+
+
+@app.get("/country/{code}/stats")
+def country_stats(code: str):
+    """Return headline stats and time-series for an EU country from Eurostat data."""
+    code = code.upper()
+    if code not in COUNTRY_NAMES:
+        raise HTTPException(status_code=404, detail=f"Country '{code}' not in EU27")
+    with get_db() as db:
+        # Latest value per indicator
+        cur = db.execute(
+            """SELECT indicator, value, year FROM eu_government_finance
+               WHERE country = ?
+               ORDER BY indicator, year DESC""",
+            [code],
+        )
+        rows = rows_to_dicts(cur)
+        latest: dict[str, dict] = {}
+        for r in rows:
+            ind = r["indicator"]
+            if ind not in latest:
+                latest[ind] = {"value": r["value"], "year": r["year"]}
+
+        # Full debt time series for chart
+        cur2 = db.execute(
+            """SELECT year, value FROM eu_government_finance
+               WHERE country = ? AND indicator = 'debt_pct_gdp'
+               ORDER BY year""",
+            [code],
+        )
+        debt_series = rows_to_dicts(cur2)
+
+        # Tax revenue latest
+        cur3 = db.execute(
+            "SELECT value_pct_gdp, year FROM eu_tax_revenue WHERE country = ? ORDER BY year DESC LIMIT 1",
+            [code],
+        )
+        tax_row = cur3.fetchone()
+
+        # Employment latest
+        cur4 = db.execute(
+            "SELECT employment_thousands, year FROM eu_public_employment WHERE country = ? ORDER BY year DESC LIMIT 1",
+            [code],
+        )
+        empl_row = cur4.fetchone()
+
+        # EU27 average for comparison (latest matching year)
+        latest_year = latest.get("debt_pct_gdp", {}).get("year")
+        eu_avg = {}
+        if latest_year:
+            cur5 = db.execute(
+                """SELECT indicator, value FROM eu_government_finance
+                   WHERE country = 'EU27_2020' AND year = ?""",
+                [latest_year],
+            )
+            for r in rows_to_dicts(cur5):
+                eu_avg[r["indicator"]] = r["value"]
+
+    return {
+        "country": code,
+        "name": COUNTRY_NAMES[code],
+        "latest": latest,
+        "eu27_avg": eu_avg,
+        "eu27_comparison_year": latest_year,
+        "debt_series": debt_series,
+        "tax_revenue_pct_gdp": tax_row[0] if tax_row else None,
+        "tax_revenue_year": tax_row[1] if tax_row else None,
+        "public_employment_thousands": empl_row[0] if empl_row else None,
+        "public_employment_year": empl_row[1] if empl_row else None,
+    }
+
+
 def _log_gap(question: str, country: str) -> tuple[str, int]:
     """Log a data gap, notify admin when threshold crossed. Returns (topic, votes)."""
     topic = question[:100]
