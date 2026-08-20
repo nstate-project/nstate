@@ -28,9 +28,12 @@ DEPT_QUERIES = {
 ROWS_PER_DEPT = 4
 
 
+RECENT_YEARS = {"2022", "2023", "2024", "2025", "2026"}
+
+
 def _ckan_csv_urls(query: str) -> list[str]:
-    """Query data.gov.uk CKAN and return CSV resource URLs, newest first."""
-    params = {"q": query, "rows": ROWS_PER_DEPT, "sort": "metadata_modified desc"}
+    """Query data.gov.uk CKAN and return recent CSV resource URLs."""
+    params = {"q": query, "rows": 20, "sort": "metadata_created desc"}
     try:
         r = httpx.get(CKAN_SEARCH, params=params, timeout=20, follow_redirects=True)
         r.raise_for_status()
@@ -43,8 +46,13 @@ def _ckan_csv_urls(query: str) -> list[str]:
         for res in pkg.get("resources", []):
             fmt = (res.get("format") or "").upper()
             url = res.get("url", "")
+            # Only take recent CSVs (2022+) to avoid loading historical archives
             if fmt == "CSV" and url.endswith(".csv"):
-                urls.append(url)
+                basename = url.split("/")[-1]
+                if any(yr in basename for yr in RECENT_YEARS):
+                    urls.append(url)
+                    if len(urls) >= ROWS_PER_DEPT:
+                        return urls
     return urls
 
 
@@ -118,7 +126,10 @@ def _load_csv(db, dept_name: str, csv_url: str) -> int:
     try:
         r = httpx.get(csv_url, timeout=60, follow_redirects=True)
         r.raise_for_status()
-        content = r.content.decode(r.apparent_encoding or "utf-8", errors="replace")
+        try:
+            content = r.text  # httpx decodes from Content-Type charset
+        except Exception:
+            content = r.content.decode("latin-1", errors="replace")
         rows = list(csv.DictReader(io.StringIO(content)))
         if not rows:
             return 0

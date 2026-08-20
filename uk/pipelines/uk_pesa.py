@@ -167,28 +167,35 @@ def run():
         db.execute("DELETE FROM uk_pesa_functional WHERE source_id = ?", [source_id])
         db.execute("DELETE FROM uk_pesa_departmental WHERE source_id = ?", [source_id])
 
-        ch1_n = 0
+        ch1_n, ch4_n = 0, 0
         for chapter, url in PESA_URLS.items():
             print(f"  Downloading PESA {chapter}...")
             try:
                 path = download(url)
                 if chapter == "chapter1":
-                    n = parse_chapter1(path, db, source_id)
-                    ch1_n = n
+                    ch1_n = parse_chapter1(path, db, source_id)
+                    print(f"  ✓ {ch1_n:,} rows from {chapter}")
                 else:
-                    n = parse_chapter4(path, db, source_id)
-                print(f"  ✓ {n:,} rows from {chapter}")
+                    ch4_n = parse_chapter4(path, db, source_id)
+                    print(f"  ✓ {ch4_n:,} rows from {chapter}")
                 os.unlink(path)
             except Exception as e:
                 print(f"  ✗ {chapter} failed: {e}")
-                n = 0
 
+        now = datetime.utcnow().isoformat()
         db.execute(
             """
             UPDATE meta_datasets SET last_loaded = ?, row_count = ?
             WHERE id = 'uk_pesa_functional'
         """,
-            [datetime.utcnow().isoformat(), ch1_n],
+            [now, ch1_n],
+        )
+        db.execute(
+            """
+            UPDATE meta_datasets SET last_loaded = ?, row_count = ?
+            WHERE id = 'uk_pesa_departmental'
+        """,
+            [now, ch4_n],
         )
 
     print("  ✓ PESA pipeline complete")
