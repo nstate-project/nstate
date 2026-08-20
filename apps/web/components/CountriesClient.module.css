@@ -1,0 +1,72 @@
+.filterBar {
+  margin: 1.5rem 0 0.75rem;
+}
+
+.filterSearch {
+  width: 100%;
+  max-width: 28rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.filterSearch:focus {
+  border-color: var(--amber);
+}
+
+.filterPills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.filterPillsLabel {
+  color: var(--text-3);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  margin-right: 0.25rem;
+  text-transform: uppercase;
+}
+
+.pill {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--border-2);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.pill:hover {
+  border-color: var(--amber);
+  color: var(--text);
+}
+
+.pillActive {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.pillReset {
+  border-color: transparent;
+  color: var(--text-3);
+  margin-left: 0.5rem;
+}
+
+.pillReset:hover {
+  color: var(--text);
+}
+
+.filterSummary {
+  display: flex;
+  align-items: center;
+  margin: 0.75rem 0 0;
+  color: var(--text-3);
+  font-size: 0.78rem;
+}
