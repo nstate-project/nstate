@@ -62,6 +62,14 @@ TABLES = [
         loaded_at     VARCHAR,
         PRIMARY KEY (country, year)
     )""",
+    """CREATE TABLE IF NOT EXISTS eu_price_levels (
+        country  VARCHAR,
+        year     INTEGER,
+        category VARCHAR,
+        pli      DOUBLE,
+        loaded_at VARCHAR,
+        PRIMARY KEY (country, year, category)
+    )""",
 ]
 
 with duckdb.connect(DB_PATH) as db:

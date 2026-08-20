@@ -217,6 +217,31 @@ eu_vat_rates  -- Standard and reduced VAT rates (2024, EC source)
   year INTEGER          -- 2024
   -- EXAMPLE (VAT rankings): SELECT country, standard_rate FROM eu_vat_rates ORDER BY standard_rate DESC
   -- EXAMPLE (compare VAT + income tax for movers): SELECT v.country, v.standard_rate, r.rate AS top_income_tax FROM eu_vat_rates v JOIN eu_tax_rates r ON v.country=r.country AND r.tax_type='personal_top_rate' ORDER BY v.standard_rate DESC
+
+eu_price_levels  -- Eurostat prc_ppp_ind Comparative Price Level Indices (annual 1995–2024)
+  country VARCHAR  -- 2-letter ISO or 'EU27_2020'
+  year INTEGER
+  category VARCHAR  -- EXACT category codes below
+  pli DOUBLE        -- Price Level Index: EU27_2020=100. Below 100 = cheaper than EU avg; above = more expensive.
+  -- CATEGORIES (use exact code in WHERE clause):
+  --   'GDP'    = Overall price level
+  --   'A0101'  = Food and non-alcoholic beverages
+  --   'A0102'  = Alcoholic beverages and tobacco
+  --   'A0103'  = Clothing and footwear
+  --   'A0104'  = Housing, water, electricity, gas (use for cost-of-living housing comparisons)
+  --   'A0105'  = Household furnishings and equipment
+  --   'A0106'  = Health
+  --   'A0107'  = Transport
+  --   'A0108'  = Communication
+  --   'A0109'  = Recreation and culture
+  --   'A0110'  = Education
+  --   'A0111'  = Restaurants and hotels
+  --   'A0112'  = Miscellaneous goods and services
+  -- INTERPRETATION: IE housing A0104=185.6 means Irish housing costs 85.6% MORE than EU average.
+  --                BG overall GDP=60.4 means Bulgaria is 39.6% CHEAPER than EU average overall.
+  -- EXAMPLE (cheapest housing 2023): SELECT country, pli FROM eu_price_levels WHERE year=2023 AND category='A0104' AND country!='EU27_2020' ORDER BY pli ASC LIMIT 10
+  -- EXAMPLE (all categories for Germany 2023): SELECT category, pli FROM eu_price_levels WHERE country='DE' AND year=2023 ORDER BY pli DESC
+  -- EXAMPLE (food cost comparison, all countries latest): SELECT country, pli FROM eu_price_levels WHERE year=2023 AND category='A0101' ORDER BY pli ASC
 """
 
 
