@@ -242,6 +242,38 @@ eu_price_levels  -- Eurostat prc_ppp_ind Comparative Price Level Indices (annual
   -- EXAMPLE (cheapest housing 2023): SELECT country, pli FROM eu_price_levels WHERE year=2023 AND category='A0104' AND country!='EU27_2020' ORDER BY pli ASC LIMIT 10
   -- EXAMPLE (all categories for Germany 2023): SELECT category, pli FROM eu_price_levels WHERE country='DE' AND year=2023 ORDER BY pli DESC
   -- EXAMPLE (food cost comparison, all countries latest): SELECT country, pli FROM eu_price_levels WHERE year=2023 AND category='A0101' ORDER BY pli ASC
+  -- NOTE: eu_price_levels now includes EU27 + EEA/EFTA (NO, IS, CH, LI) + EU candidates (ME, RS, MK, AL, BA, XK, TR) + UK
+
+-- GLOBAL DATA (World Bank WDI, CC BY 4.0) --
+-- Country codes are ISO2 (e.g. US, GB, JP, CN, IN, BR). Central government data (not general govt).
+
+wb_fiscal  -- World Bank WDI central government fiscal data (annual, ~170 countries, 2000–2024)
+  country VARCHAR  -- ISO2 country code
+  year INTEGER
+  indicator VARCHAR  -- EXACT: 'debt_pct_gdp' | 'expenditure_pct_gdp' | 'revenue_pct_gdp' | 'surplus_pct_gdp'
+  value DOUBLE      -- % of GDP (surplus_pct_gdp: positive = surplus, negative = deficit)
+  -- NOTE: 'central government' not 'general government' — figures are lower than Eurostat EDP.
+  --       Do NOT mix with eu_government_finance figures in the same comparison without noting the difference.
+  -- EXAMPLE (highest debt globally 2022): SELECT country, value FROM wb_fiscal WHERE year=2022 AND indicator='debt_pct_gdp' ORDER BY value DESC LIMIT 15
+  -- EXAMPLE (US fiscal trend): SELECT year, indicator, value FROM wb_fiscal WHERE country='US' AND year>=2010 ORDER BY year, indicator
+  -- EXAMPLE (G7 debt comparison 2022): SELECT country, value FROM wb_fiscal WHERE year=2022 AND indicator='debt_pct_gdp' AND country IN ('US','GB','DE','FR','IT','JP','CA') ORDER BY value DESC
+
+wb_price_levels  -- World Bank WDI price level index (USA=100) annual, ~170 countries
+  country VARCHAR  -- ISO2 country code
+  year INTEGER
+  pli DOUBLE        -- Price Level Index: USA=100. Above 100 = more expensive than USA.
+  -- Derived from PPP conversion factor / official exchange rate (PA.NUS.PPP / PA.NUS.FCRF * 100).
+  -- NOTE: Uses USA=100 base; eu_price_levels uses EU27=100 — different baselines, not directly comparable.
+  -- EXAMPLE (most expensive countries 2022): SELECT country, pli FROM wb_price_levels WHERE year=2022 ORDER BY pli DESC LIMIT 10
+  -- EXAMPLE (price level trend for India): SELECT year, pli FROM wb_price_levels WHERE country='IN' ORDER BY year
+
+wb_countries  -- World Bank country metadata (ISO2, name, region, income group)
+  iso2 VARCHAR PRIMARY KEY
+  iso3 VARCHAR
+  name VARCHAR
+  region VARCHAR       -- e.g. 'Europe & Central Asia', 'Sub-Saharan Africa'
+  income_group VARCHAR -- 'High income' | 'Upper middle income' | 'Lower middle income' | 'Low income'
+  -- EXAMPLE (all high-income countries): SELECT iso2, name FROM wb_countries WHERE income_group='High income' ORDER BY name
 """
 
 

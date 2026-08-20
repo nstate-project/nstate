@@ -21,6 +21,9 @@ export default function Nav() {
             <Link className="nav__link" href="/eu">EU</Link>
           </li>
           <li>
+            <Link className="nav__link" href="/countries">world</Link>
+          </li>
+          <li>
             <Link className="nav__link" href="/gaps">gaps</Link>
           </li>
           <li>
