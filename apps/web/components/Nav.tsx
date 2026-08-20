@@ -18,6 +18,9 @@ export default function Nav() {
             <Link className="nav__link" href="/uk">UK</Link>
           </li>
           <li>
+            <Link className="nav__link" href="/eu">EU</Link>
+          </li>
+          <li>
             <a
               aria-label="nstate on GitHub"
               className="nav__link"
