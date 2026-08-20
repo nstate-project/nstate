@@ -42,6 +42,12 @@ type CountryStats = {
   debt_series: { year: number; value: number }[];
   tax_revenue_pct_gdp: number | null; tax_revenue_year: number | null;
   public_employment_thousands: number | null; public_employment_year: number | null;
+  tax_breakdown: Record<string, { value: number; year: number }>;
+  labour_tax_wedge_pct: number | null; labour_tax_wedge_year: number | null;
+  corporate_tax_rate: number | null;
+  personal_top_rate: number | null;
+  vat_standard_rate: number | null;
+  vat_reduced_rate: number | null;
 };
 
 async function getStats(ucode: string): Promise<CountryStats | null> {
@@ -169,6 +175,45 @@ function DebtTable({ series }: { series: CountryStats['debt_series'] }) {
   );
 }
 
+function TaxSection({ stats, name }: { stats: CountryStats; name: string }) {
+  const { corporate_tax_rate: corp, personal_top_rate: pit, vat_standard_rate: vat,
+          labour_tax_wedge_pct: wedge, labour_tax_wedge_year: wedgeYr } = stats;
+  if (!corp && !pit && !vat && !wedge) return null;
+  return (
+    <section className="section">
+      <div className="container">
+        <h2>Tax rates</h2>
+        <p style={{ color: 'var(--text-2)', margin: '0.5rem 0 1.25rem' }}>
+          What {name} takes — statutory rates and effective burden on workers.
+        </p>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          {wedge != null && (
+            <StatCard label="Labour tax wedge" value={fmt(wedge)} unit="% of labour cost"
+              year={wedgeYr!} direction={wedge < 30 ? 'good' : wedge > 40 ? 'bad' : 'neutral'} />
+          )}
+          {pit != null && (
+            <StatCard label="Top income tax rate" value={fmt(pit, 0)} unit="%" year={2024}
+              direction={pit > 50 ? 'bad' : pit < 20 ? 'good' : 'neutral'} />
+          )}
+          {corp != null && (
+            <StatCard label="Corporate tax rate" value={fmt(corp, 1)} unit="%" year={2024}
+              direction={corp < 15 ? 'good' : corp > 28 ? 'bad' : 'neutral'} />
+          )}
+          {vat != null && (
+            <StatCard label="Standard VAT rate" value={fmt(vat, 0)} unit="%" year={2024}
+              direction={vat > 24 ? 'bad' : vat < 18 ? 'good' : 'neutral'} />
+          )}
+        </div>
+        <p style={{ color: 'var(--text-3)', fontSize: '0.78em', marginTop: '1rem' }}>
+          Labour tax wedge: effective % of gross labour cost (salary + employer contributions) going to income tax
+          and social contributions for a single person at average wage. Source: Eurostat earn_nt_taxrate.
+          Statutory rates: OECD Taxing Wages 2024 / EC Taxation Trends 2024.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function QuestionsSection({ name }: { name: string }) {
   const qs = [
     `How has ${name}'s government debt changed since 2010?`,
@@ -247,6 +292,7 @@ export default async function CountryChapterPage(
         </div>
       </div>
       {stats && <HeadlineStats stats={stats} />}
+      {stats && <TaxSection stats={stats} name={name} />}
       {stats && <DebtTable series={stats.debt_series} />}
       <QuestionsSection name={name} />
       <DataSources />

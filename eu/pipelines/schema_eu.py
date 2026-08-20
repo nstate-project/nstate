@@ -28,6 +28,40 @@ TABLES = [
         loaded_at             VARCHAR,
         PRIMARY KEY (country, year)
     )""",
+    """CREATE TABLE IF NOT EXISTS eu_tax_breakdown (
+        country   VARCHAR,
+        year      INTEGER,
+        indicator VARCHAR,
+        value     DOUBLE,
+        loaded_at VARCHAR,
+        PRIMARY KEY (country, year, indicator)
+    )""",
+    """CREATE TABLE IF NOT EXISTS eu_labour_tax_wedge (
+        country      VARCHAR,
+        year         INTEGER,
+        income_level VARCHAR,
+        tax_wedge_pct DOUBLE,
+        loaded_at    VARCHAR,
+        PRIMARY KEY (country, year, income_level)
+    )""",
+    """CREATE TABLE IF NOT EXISTS eu_tax_rates (
+        country  VARCHAR,
+        tax_type VARCHAR,
+        rate     DOUBLE,
+        year     INTEGER,
+        source   VARCHAR,
+        loaded_at VARCHAR,
+        PRIMARY KEY (country, tax_type, year)
+    )""",
+    """CREATE TABLE IF NOT EXISTS eu_vat_rates (
+        country       VARCHAR,
+        standard_rate DOUBLE,
+        reduced_rate  DOUBLE,
+        year          INTEGER,
+        source        VARCHAR,
+        loaded_at     VARCHAR,
+        PRIMARY KEY (country, year)
+    )""",
 ]
 
 with duckdb.connect(DB_PATH) as db:

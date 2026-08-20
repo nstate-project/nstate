@@ -184,6 +184,39 @@ eu_public_employment  -- Eurostat nama_10_a64_e NACE O-Q (annual 1995–2024)
   year INTEGER
   employment_thousands DOUBLE  -- persons employed in public admin, education, health (thousands)
   -- EXAMPLE: SELECT country, employment_thousands FROM eu_public_employment WHERE year=2023 AND country IN ('PT','DE','FR') ORDER BY employment_thousands DESC
+
+eu_tax_breakdown  -- Eurostat gov_10a_taxag breakdown by tax type (annual 1995–2025)
+  country VARCHAR
+  year INTEGER
+  indicator VARCHAR  -- EXACT: 'vat_pct_gdp' | 'personal_income_tax_pct_gdp' | 'corporate_tax_pct_gdp' | 'employee_social_contrib_pct_gdp' | 'employer_social_contrib_pct_gdp' | 'excise_duties_pct_gdp'
+  value DOUBLE       -- % of GDP
+  -- EXAMPLE (compare VAT take 2023): SELECT country, value FROM eu_tax_breakdown WHERE year=2023 AND indicator='vat_pct_gdp' AND country NOT LIKE '%EU27%' ORDER BY value DESC
+  -- EXAMPLE (income tax vs VAT for Germany): SELECT indicator, value FROM eu_tax_breakdown WHERE country='DE' AND year=2023 AND indicator IN ('vat_pct_gdp','personal_income_tax_pct_gdp')
+
+eu_labour_tax_wedge  -- Eurostat earn_nt_taxrate — effective % of gross labour cost going to tax (annual)
+  country VARCHAR
+  year INTEGER
+  income_level VARCHAR  -- EXACT: 'AW67' (67% avg wage) | 'AW100' (avg wage) | 'AW125' (125% avg wage)
+  tax_wedge_pct DOUBLE  -- % of gross labour cost (salary + employer contributions) taken by income tax + social contributions
+  -- Single person, no children. Lower = worker keeps more. IE typically ~28%, BE ~40%, DK ~36%.
+  -- EXAMPLE (compare tax burden at avg wage 2022): SELECT country, tax_wedge_pct FROM eu_labour_tax_wedge WHERE year=2022 AND income_level='AW100' ORDER BY tax_wedge_pct DESC
+  -- EXAMPLE (trend for PT at avg wage): SELECT year, tax_wedge_pct FROM eu_labour_tax_wedge WHERE country='PT' AND income_level='AW100' ORDER BY year
+
+eu_tax_rates  -- Statutory tax rates per country (2024, OECD/EC source)
+  country VARCHAR
+  tax_type VARCHAR  -- EXACT: 'personal_top_rate' | 'corporate_rate'
+  rate DOUBLE       -- percentage (e.g. 12.5 = 12.5%)
+  year INTEGER      -- 2024
+  -- EXAMPLE (corporate tax rankings): SELECT country, rate FROM eu_tax_rates WHERE tax_type='corporate_rate' AND year=2024 ORDER BY rate ASC
+  -- EXAMPLE (top income tax comparison): SELECT country, rate FROM eu_tax_rates WHERE tax_type='personal_top_rate' ORDER BY rate DESC
+
+eu_vat_rates  -- Standard and reduced VAT rates (2024, EC source)
+  country VARCHAR
+  standard_rate DOUBLE  -- standard VAT rate % (HU=27 highest, LU=17 lowest)
+  reduced_rate DOUBLE   -- primary reduced rate % (NULL where no reduced rate, e.g. DK)
+  year INTEGER          -- 2024
+  -- EXAMPLE (VAT rankings): SELECT country, standard_rate FROM eu_vat_rates ORDER BY standard_rate DESC
+  -- EXAMPLE (compare VAT + income tax for movers): SELECT v.country, v.standard_rate, r.rate AS top_income_tax FROM eu_vat_rates v JOIN eu_tax_rates r ON v.country=r.country AND r.tax_type='personal_top_rate' ORDER BY v.standard_rate DESC
 """
 
 
