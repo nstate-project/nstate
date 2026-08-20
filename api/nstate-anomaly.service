@@ -1,0 +1,11 @@
+[Unit]
+Description=nstate anomaly detector
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/nstate/api
+ExecStart=/opt/nstate-venv/bin/python /opt/nstate/api/anomaly_detector.py
+StandardOutput=journal
+StandardError=journal
