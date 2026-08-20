@@ -42,6 +42,7 @@ run_pipeline "PESA Expenditure"                 "$PIPE/uk_pesa.py"
 run_pipeline "DWP Benefits"                     "$PIPE/uk_dwp_benefits.py"
 
 # Tier 3: APIs and scraped CSVs
+run_pipeline "Public Sector Finances (ONS)"     "$PIPE/uk_psf.py"
 run_pipeline "Find a Tender (contracts)"        "$PIPE/uk_find_a_tender.py"
 run_pipeline "Spend Over £25k"                  "$PIPE/uk_spend_25k.py"
 
