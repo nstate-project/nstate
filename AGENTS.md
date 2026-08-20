@@ -1,22 +1,38 @@
 ## Development
 
-When starting the dev server, use background mode:
+### Frontend (apps/web — Next.js 15 App Router)
 
-```
-astro dev --background
+```bash
+cd apps/web
+npm install
+npm run dev       # → localhost:3000
+npm run build     # verify before PR
 ```
 
-Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
+### Backend (services/api — FastAPI)
+
+```bash
+cd services/api
+python -m uvicorn main:app --reload  # → localhost:8000
+```
+
+Or run the full stack:
+
+```bash
+docker compose up
+```
+
+## Architecture
+
+See `research/SPEC-NSTATE-PLATFORM.md` for the authoritative platform spec.
+
+- Frontend: Next.js 15 (App Router) → `apps/web/`
+- Backend: FastAPI → `services/api/` (deployed to VPS 95.217.212.173)
+- Database: DuckDB at `/opt/nstate/data/nstate.duckdb` on VPS
+- Data pipelines: Python scripts → `data/uk/pipelines/`
 
 ## Documentation
 
-Full documentation: https://docs.astro.build
-
-Consult these guides before working on related tasks:
-
-- [Adding pages, dynamic routes, or middleware](https://docs.astro.build/en/guides/routing/)
-- [Working with Astro components](https://docs.astro.build/en/basics/astro-components/)
-- [Using React, Vue, Svelte, or other framework components](https://docs.astro.build/en/guides/framework-components/)
-- [Adding or managing content](https://docs.astro.build/en/guides/content-collections/)
-- [Adding styles or using Tailwind](https://docs.astro.build/en/guides/styling/)
-- [Supporting multiple languages](https://docs.astro.build/en/guides/internationalization/)
+- [Next.js App Router](https://nextjs.org/docs/app)
+- [next/og — OG image generation](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image)
+- [Vega-Lite — charts](https://vega.github.io/vega-lite/)
