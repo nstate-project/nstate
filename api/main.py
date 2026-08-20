@@ -28,7 +28,11 @@ app = FastAPI(title="nstate API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://nstate.org", "http://localhost:3000"],
+    allow_origins=[
+        "https://nstate.org",
+        "https://www.nstate.org",
+        "http://localhost:3000",
+    ],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
