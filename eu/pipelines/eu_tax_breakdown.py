@@ -44,6 +44,9 @@ ALL_EU = [
     "SI",
     "SK",
     "EU27_2020",
+    # EEA/EFTA — gov_10a_taxag covers VAT + excise for these; D51A/D51B may be sparse
+    "NO",
+    "IS",
 ]
 
 INDICATORS = [

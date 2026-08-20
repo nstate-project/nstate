@@ -43,6 +43,10 @@ ALL_EU = [
     "SE",
     "SI",
     "SK",
+    # EEA/EFTA — earn_nt_taxrate covers these
+    "NO",
+    "IS",
+    "CH",
 ]
 
 # ecase code → human-readable income level label

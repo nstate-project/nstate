@@ -12,6 +12,7 @@ import os
 import logging
 import time
 from agent import answer as agent_answer
+from routes_global import router as global_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nstate")
@@ -31,6 +32,8 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+app.include_router(global_router)
 
 DB_PATH = os.getenv("DB_PATH", "/opt/nstate/data/nstate.duckdb")
 

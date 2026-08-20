@@ -43,6 +43,10 @@ ALL_EU = [
     "SE",
     "SI",
     "SK",
+    # EEA/EFTA — nama_10_a64_e covers these
+    "NO",
+    "IS",
+    "CH",
 ]
 
 EMPL_PARAMS = {"nace_r2": "O-Q", "na_item": "EMP_DC", "unit": "THS_PER", "freq": "A"}

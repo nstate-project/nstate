@@ -45,6 +45,20 @@ ALL_EU = [
     "SI",
     "SK",
     "EU27_2020",
+    # EEA/EFTA
+    "NO",
+    "IS",
+    "CH",
+    "LI",
+    # EU candidate countries and other Eurostat PPP participants
+    "ME",
+    "RS",
+    "MK",
+    "AL",
+    "BA",
+    "XK",
+    "TR",
+    "UK",
 ]
 
 # Key expenditure categories (top-level COICOP headings)

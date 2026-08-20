@@ -43,6 +43,11 @@ PERSONAL_TOP_RATES = {
     "SE": 52.3,
     "SI": 50.0,
     "SK": 25.0,
+    # EEA/EFTA — OECD Taxing Wages 2024
+    "NO": 47.4,  # 22% bracket + 17.4% surtax top rate
+    "IS": 46.25,  # combined state + municipal
+    "CH": 40.0,  # federal 11.5% + cantonal, Zurich reference; varies widely by canton
+    "LI": 22.4,  # Liechtenstein (low flat-rate system)
 }
 
 # Headline corporate income tax rate (2024)
@@ -75,6 +80,11 @@ CORPORATE_RATES = {
     "SE": 20.6,
     "SI": 19.0,
     "SK": 21.0,
+    # EEA/EFTA — OECD CIT rates 2024
+    "NO": 22.0,  # standard CIT rate
+    "IS": 20.0,
+    "CH": 19.7,  # combined federal (8.5%) + typical cantonal; varies by canton
+    "LI": 12.5,
 }
 
 DATA_YEAR = 2024
