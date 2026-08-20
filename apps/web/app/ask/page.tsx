@@ -5,11 +5,11 @@ import { FormEvent, RefObject, useEffect, useRef, useState } from 'react';
 const API_URL = 'https://api.nstate.org/query';
 
 const EXAMPLES = [
+  'Which country has the highest government debt as % of GDP?',
+  'How does UK tax revenue compare to France and Germany?',
   'How many civil servants work for the UK government?',
   'What are the biggest categories of UK government spending?',
-  'How much did HMRC collect in income tax last year?',
-  'What is the average UK private sector salary?',
-  'How many people claim Universal Credit?',
+  'Which EU country has the lowest corporate tax rate?',
 ];
 
 type QueryResponse = {
@@ -177,8 +177,20 @@ export default function AskPage() {
   const [question, setQuestion] = useState('');
   const [result, setResult] = useState<QueryResponse | null>(null);
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const hasAutoSubmitted = useRef(false);
 
   useVegaChart(chartRef, result);
+
+  useEffect(() => {
+    if (hasAutoSubmitted.current) return;
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) {
+      hasAutoSubmitted.current = true;
+      setQuestion(q);
+      void submitQuery(q);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function submitQuery(q: string) {
     setQuestion(q); setResult(null); setState('loading');
@@ -204,15 +216,15 @@ export default function AskPage() {
     <>
       <div className="container page-header">
         <h1>Ask the data</h1>
-        <p>Query UK government data in plain English. Every answer is backed by official data.</p>
+        <p>Query UK, EU, and global government data in plain English. Every answer is backed by official primary sources.</p>
       </div>
       <div className="ask-bar">
         <div className="container">
           <form className="ask-form" onSubmit={handleSubmit}>
             <input
-              aria-label="Question about UK government data"
+              aria-label="Ask about government data"
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="How much does the UK government spend on the NHS per year?"
+              placeholder="Which country has the highest debt? How much does the UK spend on the NHS?"
               value={question}
             />
             <button className="button" type="submit">ask →</button>
